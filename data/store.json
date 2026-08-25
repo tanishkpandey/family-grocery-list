@@ -1,0 +1,97 @@
+{
+  "lists": {
+    "3815315c-1f0c-4b14-aeec-863a4e61443e": {
+      "id": "3815315c-1f0c-4b14-aeec-863a4e61443e",
+      "title": "Weekend Groceries",
+      "share_token": "TqgjKrBbj",
+      "created_at": "2026-08-25T19:15:55.091Z",
+      "updated_at": "2026-08-25T19:29:53.323Z",
+      "items": []
+    },
+    "46ebd71e-1042-4a27-878f-cd0fd738172a": {
+      "id": "46ebd71e-1042-4a27-878f-cd0fd738172a",
+      "title": "Shopping List",
+      "share_token": "3k5bgbNVz",
+      "created_at": "2026-08-25T19:16:22.383Z",
+      "updated_at": "2026-08-25T19:48:16.981Z",
+      "items": []
+    },
+    "e17f4bb3-b124-4146-8b58-159659e80834": {
+      "id": "e17f4bb3-b124-4146-8b58-159659e80834",
+      "title": "Cloud Grocery List",
+      "share_token": "bw3qFXvsD",
+      "created_at": "2026-08-25T19:39:43.534Z",
+      "updated_at": "2026-08-25T19:52:27.142Z",
+      "items": [
+        {
+          "id": "8f7c8b9a-27b5-40da-9970-8cd9ce472f69",
+          "list_id": "e17f4bb3-b124-4146-8b58-159659e80834",
+          "name": "apple",
+          "quantity": null,
+          "completed": false,
+          "position": 1,
+          "created_at": "2026-08-25T19:52:27.142Z",
+          "updated_at": "2026-08-25T19:52:27.142Z"
+        }
+      ]
+    },
+    "7be2d176-a54d-4c03-a270-c8c201be121e": {
+      "id": "7be2d176-a54d-4c03-a270-c8c201be121e",
+      "title": "Family Grocery List",
+      "share_token": "gWVZzRgKv",
+      "created_at": "2026-08-25T19:54:30.797Z",
+      "updated_at": "2026-08-25T19:54:45.270Z",
+      "items": [
+        {
+          "id": "873a5d4b-9f91-4899-9e5b-588dcb1524a8",
+          "list_id": "7be2d176-a54d-4c03-a270-c8c201be121e",
+          "name": "Apple",
+          "quantity": null,
+          "completed": false,
+          "position": 1,
+          "created_at": "2026-08-25T19:54:39.641Z",
+          "updated_at": "2026-08-25T19:54:39.641Z"
+        },
+        {
+          "id": "a3f5c153-a6a4-438d-a01f-368f2eea7f60",
+          "list_id": "7be2d176-a54d-4c03-a270-c8c201be121e",
+          "name": "Mango",
+          "quantity": null,
+          "completed": false,
+          "position": 2,
+          "created_at": "2026-08-25T19:54:41.721Z",
+          "updated_at": "2026-08-25T19:54:41.721Z"
+        },
+        {
+          "id": "005a0dd0-3ba8-4603-a71c-b7c77957b23c",
+          "list_id": "7be2d176-a54d-4c03-a270-c8c201be121e",
+          "name": "banana",
+          "quantity": null,
+          "completed": false,
+          "position": 3,
+          "created_at": "2026-08-25T19:54:45.270Z",
+          "updated_at": "2026-08-25T19:54:45.270Z"
+        }
+      ]
+    },
+    "0c4102ca-793b-458a-8357-7cc93b7d47bf": {
+      "id": "0c4102ca-793b-458a-8357-7cc93b7d47bf",
+      "title": "Medicine List",
+      "share_token": "87uKjaHwB",
+      "created_at": "2026-08-25T19:54:59.337Z",
+      "updated_at": "2026-08-25T19:55:12.206Z",
+      "items": [
+        {
+          "id": "3114fc93-341f-4b7c-9786-fab772abc4c9",
+          "list_id": "0c4102ca-793b-458a-8357-7cc93b7d47bf",
+          "name": "PCM",
+          "quantity": null,
+          "completed": false,
+          "position": 1,
+          "created_at": "2026-08-25T19:55:12.206Z",
+          "updated_at": "2026-08-25T19:55:12.206Z"
+        }
+      ]
+    }
+  }
+}
