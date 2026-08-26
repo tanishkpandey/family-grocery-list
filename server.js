@@ -3,13 +3,10 @@
  * Uses 100% native Node.js built-in modules (http, fs, path, crypto, url).
  * Integrated with Supabase Cloud Database via native REST API (fetch).
  * Features:
- *  - Direct Lists Dashboard view
- *  - Unique List Name enforcement (no duplicate list names)
- *  - Empty list auto-cleanup (lists with 0 items are cleaned up)
- *  - Direct List Delete on list itself
- *  - Subtle, quiet toast notifications
- *  - Supabase Cloud PostgreSQL Sync (zero npm)
- *  - Real-time Server-Sent Events (SSE) with Google-style user presence avatars
+ *  - Emojis for live active members (🦚, 🪷, 🐘, 🥭, 🫖, 🐯, 🥥, 🪔, 🌻)
+ *  - Indian cultural household elements & touches
+ *  - Lists-First Dashboard with unique names and direct deletion
+ *  - Footer: Made by Tanishk with love ❤️
  *  - Custom Theme Palette: #F4EEFF, #DCD6F7, #A6B1E1, #424874
  */
 
@@ -304,7 +301,7 @@ function saveStore() {
 
 loadStore();
 
-// Google-style colorful avatar palette matching the theme: 424874, A6B1E1, DCD6F7
+// Theme color palette matching #F4EEFF, #DCD6F7, #A6B1E1, #424874
 const AVATAR_PALETTE = [
   { name: 'Navy', bg: '#424874', text: '#FFFFFF' },
   { name: 'Periwinkle', bg: '#A6B1E1', text: '#424874' },
@@ -312,6 +309,20 @@ const AVATAR_PALETTE = [
   { name: 'Indigo', bg: '#545B8C', text: '#FFFFFF' },
   { name: 'Lilac', bg: '#8E97C6', text: '#FFFFFF' },
   { name: 'Slate', bg: '#2C3053', text: '#FFFFFF' },
+];
+
+// Indian & Family Presence Emojis for Active Members
+const PRESENCE_EMOJIS = [
+  { emoji: '🦚', label: 'Mor (Peacock)' },
+  { emoji: '🪷', label: 'Kamal (Lotus)' },
+  { emoji: '🐘', label: 'Haathi (Elephant)' },
+  { emoji: '🥭', label: 'Aam (Mango)' },
+  { emoji: '🫖', label: 'Chai' },
+  { emoji: '🐯', label: 'Bagh (Tiger)' },
+  { emoji: '🥥', label: 'Nariyal (Coconut)' },
+  { emoji: '🪔', label: 'Diya' },
+  { emoji: '🌻', label: 'Surajmukhi' },
+  { emoji: '🦁', label: 'Sher (Lion)' },
 ];
 
 const sseClients = new Map(); // listId -> Set of res objects
@@ -323,10 +334,12 @@ function getPresenceUsers(listId) {
   let idx = 0;
   for (const client of clients) {
     const palette = AVATAR_PALETTE[idx % AVATAR_PALETTE.length];
+    const emojiInfo = PRESENCE_EMOJIS[idx % PRESENCE_EMOJIS.length];
     users.push({
       clientId: client._clientId || `c-${idx}`,
-      name: client._clientName || `Family Member ${idx + 1}`,
-      initial: String.fromCharCode(65 + (idx % 26)),
+      name: client._clientName || (idx === 0 ? 'You' : `Family Member (${emojiInfo.label})`),
+      emoji: emojiInfo.emoji,
+      initial: emojiInfo.emoji,
       color: palette.bg,
       textColor: palette.text,
     });
@@ -453,16 +466,14 @@ const server = http.createServer(async (req, res) => {
     const body = await parseBody(req);
     const title = (body.title || 'Family Grocery List').trim().slice(0, 100);
 
-    // Enforce unique name: check if list with same title already exists
     const existing = Object.values(store.lists).find(
       (l) => l.title.trim().toLowerCase() === title.trim().toLowerCase()
     );
     if (existing) {
-      // Return existing list instead of creating duplicate
       return sendJSON(res, 200, existing);
     }
 
-    // Clean up empty lists (if any list has 0 items and is abandoned)
+    // Clean up empty lists with 0 items
     for (const key in store.lists) {
       if (store.lists[key].items && store.lists[key].items.length === 0) {
         const emptyId = store.lists[key].id;
@@ -549,7 +560,7 @@ const server = http.createServer(async (req, res) => {
     return sendJSON(res, 200, list);
   }
 
-  // 5. Update list title: PUT /api/lists/:id (Enforces unique names)
+  // 5. Update list title: PUT /api/lists/:id
   if (method === 'PUT' && getListMatch) {
     const listId = getListMatch[1];
     const list = await findListByIdOrToken(listId);
@@ -559,7 +570,6 @@ const server = http.createServer(async (req, res) => {
     const body = await parseBody(req);
     const newTitle = (body.title || '').trim().slice(0, 100);
     if (newTitle) {
-      // Check for name conflict
       const conflict = Object.values(store.lists).find(
         (l) => l.id !== list.id && l.title.trim().toLowerCase() === newTitle.toLowerCase()
       );
@@ -725,7 +735,7 @@ const server = http.createServer(async (req, res) => {
     return sendJSON(res, 200, item);
   }
 
-  // 10. Delete item: DELETE /api/lists/:id/items/:itemId (Auto-cleans list if empty)
+  // 10. Delete item: DELETE /api/lists/:id/items/:itemId
   if (method === 'DELETE' && updateItemMatch) {
     const listId = updateItemMatch[1];
     const itemId = updateItemMatch[2];
@@ -788,7 +798,8 @@ server.listen(PORT, () => {
   console.log(`\n==================================================`);
   console.log(`  Family Grocery List server running on port ${PORT}`);
   console.log(`  Theme Palette: #F4EEFF, #DCD6F7, #A6B1E1, #424874`);
+  console.log(`  Cultural Touch: Indian Household Elements & Emojis`);
   console.log(`  Cloud DB: ${isCloudConfigured ? 'Connected to Supabase (' + SUPABASE_URL + ')' : 'Local disk fallback'}`);
-  console.log(`  Features: Lists-First Home, Unique Names, Direct Delete`);
+  console.log(`  Features: Emoji Presence Avatars, Lists Dashboard`);
   console.log(`==================================================\n`);
 });

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Family Grocery List | Shared Household Notepad</title>
-  <meta name="description" content="A simple, fast, shared grocery list for your family. No login, instant realtime sync.">
+  <title>Ghar Ki Rasoi | Family Grocery List</title>
+  <meta name="description" content="A simple, fast, shared grocery notepad for your family. No login, instant realtime sync.">
   <meta name="theme-color" content="#F4EEFF">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -12,22 +12,19 @@
 </head>
 <body>
 
-  <!-- ================= STATE A: ALL LISTS DASHBOARD (FIRST THING USER SEES) ================= -->
+  <!-- ================= STATE A: ALL LISTS DASHBOARD ================= -->
   <div id="view-dashboard" class="view-container">
     <div class="dashboard-layout">
       <!-- Dashboard Header -->
       <header class="dashboard-header">
         <div class="brand-wrap">
           <div class="app-icon-mini">
-            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="8" cy="21" r="1"></circle>
-              <circle cx="19" cy="21" r="1"></circle>
-              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
-            </svg>
+            <span class="brand-emoji">🧺</span>
           </div>
           <div>
+            <div class="brand-badge-hindi">घर का राशन</div>
             <h1 class="dashboard-title">Shopping Lists</h1>
-            <p class="dashboard-sub">Your shared family notepads</p>
+            <p class="dashboard-sub">Shared household notepads</p>
           </div>
         </div>
 
@@ -40,13 +37,13 @@
         </button>
       </header>
 
-      <!-- Quick New List Inline Form (Hidden by default, opens when clicked) -->
+      <!-- Quick New List Inline Form -->
       <div id="form-new-list-card" class="new-list-card hidden">
         <form id="form-create-list" class="create-list-form">
-          <input type="text" id="input-new-list-title" placeholder="List name (e.g. Weekly Groceries, Costco, Pharmacy)" maxLength="60" autocomplete="off" class="input-new-list" />
+          <input type="text" id="input-new-list-title" placeholder="List name (e.g. Weekly Ration, Sabzi Mandi, Kirana)" maxLength="60" autocomplete="off" class="input-new-list" />
           <div class="create-list-buttons">
             <button id="btn-cancel-create" type="button" class="btn-cancel">Cancel</button>
-            <button type="submit" class="btn-save">Create</button>
+            <button type="submit" class="btn-save">Create List</button>
           </div>
         </form>
       </div>
@@ -57,6 +54,11 @@
           <div class="loading-hint">Loading your shopping lists...</div>
         </div>
       </main>
+
+      <!-- Indian Touch Footer -->
+      <footer class="app-footer">
+        <p class="footer-credit">Made by Tanishk with love ❤️</p>
+      </footer>
     </div>
   </div>
 
@@ -69,7 +71,7 @@
         <div class="header-left">
           <!-- Back to All Lists Button -->
           <button id="btn-back-to-lists" class="btn-back-lists" aria-label="Back to all shopping lists">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
             <span>All Lists</span>
@@ -89,7 +91,7 @@
             <button id="btn-save-title" class="btn-save-title">Save</button>
           </div>
 
-          <!-- Google-style People Online Presence Stack -->
+          <!-- Emoji Presence Avatars Stack -->
           <div class="presence-bar">
             <div id="avatar-stack" class="avatar-stack"></div>
             <span id="presence-label" class="presence-label">1 online</span>
@@ -122,26 +124,41 @@
       <!-- Main Grocery Items Sections -->
       <main class="list-main">
 
-        <!-- Empty State -->
-        <div id="empty-state" class="empty-state">
-          <p class="empty-title">Your grocery list is empty.</p>
-          <p class="empty-sub">Type an item you need to buy below.</p>
+        <!-- Quick Indian Household Suggestion Chips -->
+        <div class="quick-chips-container">
+          <span class="chips-label">Quick add:</span>
+          <div class="chips-scroll">
+            <button type="button" class="quick-chip" data-item="Milk (दूध)" data-qty="2 pkts">🥛 Doodh</button>
+            <button type="button" class="quick-chip" data-item="Chai Patti" data-qty="500g">☕ Chai</button>
+            <button type="button" class="quick-chip" data-item="Atta / Chawal" data-qty="5 kg">🌾 Atta</button>
+            <button type="button" class="quick-chip" data-item="Dahi (Curd)" data-qty="1 pkt">🥣 Dahi</button>
+            <button type="button" class="quick-chip" data-item="Paneer" data-qty="250g">🧈 Paneer</button>
+            <button type="button" class="quick-chip" data-item="Pyaaz / Aloo" data-qty="2 kg">🧅 Aloo-Pyaaz</button>
+            <button type="button" class="quick-chip" data-item="Dhaniya / Mirchi" data-qty="1 bunch">🌿 Dhaniya</button>
+          </div>
         </div>
 
-        <!-- Need to Buy Section -->
+        <!-- Empty State with Indian Touch -->
+        <div id="empty-state" class="empty-state">
+          <div class="empty-emoji">🧺</div>
+          <p class="empty-title">झोला खाली है (Jhola is empty)</p>
+          <p class="empty-sub">Type an item or tap a quick chip above to add to your ration list.</p>
+        </div>
+
+        <!-- Need to Buy Section (खरीदना है) -->
         <section id="section-active" class="item-section hidden">
           <div class="section-label">
-            <span>NEED TO BUY</span>
+            <span>NEED TO BUY • खरीदना है</span>
             <span id="active-count" class="count-badge">0</span>
           </div>
           <div id="active-items" class="item-list"></div>
         </section>
 
-        <!-- Purchased Section -->
+        <!-- Purchased Section (खरीद लिया) -->
         <section id="section-completed" class="item-section hidden">
           <div class="section-label section-label-flex">
             <div class="label-left">
-              <span>PURCHASED</span>
+              <span>PURCHASED • खरीद लिया ✓</span>
               <span id="completed-count" class="count-badge">0</span>
             </div>
             <button id="btn-clear-purchased-inline" class="btn-text-action" type="button">
@@ -157,13 +174,13 @@
       <footer class="add-bar-sticky">
         <div class="add-bar-inner">
           <div id="qty-row" class="qty-row hidden">
-            <input type="text" id="input-item-qty" placeholder="Quantity (e.g. 2 packets, 1 kg)" maxLength="100" class="input-qty" />
+            <input type="text" id="input-item-qty" placeholder="Quantity (e.g. 2 pkts, 1 kg, आधा किलो)" maxLength="100" class="input-qty" />
             <button id="btn-close-qty" class="btn-close-qty" type="button">Cancel</button>
           </div>
 
           <form id="form-add-item" class="add-form">
             <div class="input-wrapper">
-              <input type="text" id="input-item-name" placeholder="Add item..." maxLength="200" autocomplete="off" class="input-name" />
+              <input type="text" id="input-item-name" placeholder="Add item (दाल, Dahi, Sabzi)..." maxLength="200" autocomplete="off" class="input-name" />
               <button id="btn-toggle-qty" type="button" class="btn-toggle-qty">+ qty</button>
             </div>
 
@@ -175,6 +192,9 @@
             </button>
           </form>
         </div>
+
+        <!-- Footer Credit in List View -->
+        <p class="footer-credit-mini">Made by Tanishk with love ❤️</p>
       </footer>
 
     </div>

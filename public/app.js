@@ -2,10 +2,11 @@
  * Family Grocery List - Client Application Logic
  * Ultra-lightweight vanilla JS with Server-Sent Events (SSE) realtime collaboration.
  * Features:
+ *  - Emoji Presence Avatars (🦚, 🪷, 🐘, 🥭, 🫖, 🐯, 🥥, 🪔, 🌻)
+ *  - Indian Cultural Household Grocery Chips
  *  - Lists-First Dashboard (Opening app shows lists directly)
  *  - Direct List Delete on list card and in list header
- *  - Unique List Name check
- *  - Subtle, quiet, non-distracting toasts
+ *  - Footer: Made by Tanishk with love ❤️
  *  - Custom Theme Palette: #F4EEFF, #DCD6F7, #A6B1E1, #424874
  */
 
@@ -59,13 +60,14 @@
   const completedCountEl = document.getElementById('completed-count');
   const btnClearPurchasedInline = document.getElementById('btn-clear-purchased-inline');
 
-  // Add Bar
+  // Add Bar & Quick Chips
   const formAddItem = document.getElementById('form-add-item');
   const inputItemName = document.getElementById('input-item-name');
   const inputItemQty = document.getElementById('input-item-qty');
   const qtyRow = document.getElementById('qty-row');
   const btnToggleQty = document.getElementById('btn-toggle-qty');
   const btnCloseQty = document.getElementById('btn-close-qty');
+  const quickChips = document.querySelectorAll('.quick-chip');
 
   // Modal
   const modalBackdrop = document.getElementById('modal-backdrop');
@@ -164,8 +166,9 @@
     if (!allLists || allLists.length === 0) {
       dashboardListsContainer.innerHTML = `
         <div class="empty-state" id="btn-empty-create">
+          <div class="empty-emoji">🧺</div>
           <p class="empty-title">No shopping lists yet</p>
-          <p class="empty-sub">Tap "+ New List" above to create your first family notepad.</p>
+          <p class="empty-sub">Tap "+ New List" above to create your first household ration list.</p>
         </div>
       `;
       const btnEmptyCreate = document.getElementById('btn-empty-create');
@@ -354,7 +357,6 @@
           console.error(err);
         }
 
-        // If we deleted the list currently open, return to dashboard
         if (currentList && (currentList.id === listObj.id || currentList.share_token === listObj.share_token)) {
           window.history.pushState(null, '', '/');
           showDashboardView();
@@ -408,7 +410,6 @@
       return;
     }
 
-    // Check duplicate
     const conflict = allLists.some(
       (l) => l.id !== currentList.id && l.title.trim().toLowerCase() === newTitle.toLowerCase()
     );
@@ -442,15 +443,16 @@
     }
   });
 
-  // --- GOOGLE-STYLE PRESENCE AVATARS ---
+  // --- EMOJI PRESENCE AVATARS ---
+  const DEFAULT_EMOJIS = ['🦚', '🪷', '🐘', '🥭', '🫖', '🐯', '🥥', '🪔', '🌻', '🦁'];
+
   function renderPresenceAvatars(users = [], count = 1) {
     avatarStackEl.innerHTML = '';
 
     if (!users || users.length === 0) {
       const el = document.createElement('div');
       el.className = 'presence-avatar';
-      el.style.backgroundColor = '#424874';
-      el.textContent = 'You';
+      el.textContent = '🦚';
       el.title = 'You are online';
       avatarStackEl.appendChild(el);
       presenceLabelEl.textContent = '1 online';
@@ -464,9 +466,8 @@
       const av = document.createElement('div');
       av.className = 'presence-avatar';
       av.style.backgroundColor = u.color || '#424874';
-      av.style.color = u.textColor || '#FFFFFF';
-      av.textContent = u.initial || (idx === 0 ? 'Y' : `${idx + 1}`);
-      av.title = idx === 0 ? 'You' : `Family Member (${u.name || idx + 1})`;
+      av.textContent = u.emoji || u.initial || DEFAULT_EMOJIS[idx % DEFAULT_EMOJIS.length];
+      av.title = idx === 0 ? 'You (online)' : `Family Member (${u.name || 'online'})`;
       avatarStackEl.appendChild(av);
     });
 
@@ -848,6 +849,20 @@
       renderGroceryItems();
       showToast("Couldn't add item.");
     }
+  });
+
+  // Quick Indian Suggestions chips click handler
+  quickChips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const itemName = chip.getAttribute('data-item');
+      const itemQty = chip.getAttribute('data-qty');
+      inputItemName.value = itemName;
+      if (itemQty) {
+        inputItemQty.value = itemQty;
+        qtyRow.classList.remove('hidden');
+      }
+      inputItemName.focus();
+    });
   });
 
   // Quantity toggling
