@@ -16,6 +16,7 @@
   --accent-primary: #A6B1E1;   /* Periwinkle Accent */
   --accent-dark: #424874;      /* Deep Primary */
   --danger-color: #E63946;
+  --success-color: #2A9D8F;
   --radius-lg: 18px;
   --radius-md: 14px;
   --radius-sm: 10px;
@@ -53,6 +54,49 @@ h1, h2, h3, h4, .dashboard-title, .list-title, .modal-title {
 
 .brand-badge-hindi {
   font-family: var(--font-hindi);
+}
+
+/* ================= OFFLINE BANNER ================= */
+.offline-banner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  background: var(--danger-color);
+  color: #FFFFFF;
+  padding: 10px 16px;
+  box-shadow: 0 4px 14px rgba(230, 57, 70, 0.3);
+  animation: bannerSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.offline-banner.online-recovered {
+  background: var(--success-color);
+  box-shadow: 0 4px 14px rgba(42, 157, 143, 0.3);
+}
+
+.offline-banner-inner {
+  max-width: 650px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.35;
+}
+
+@keyframes bannerSlideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Smooth Page Transitions */
@@ -1072,7 +1116,7 @@ h1, h2, h3, h4, .dashboard-title, .list-title, .modal-title {
   opacity: 0.85;
 }
 
-/* ================= MODAL & QUICK CHIPS CONFIGURATION (FULLY RESPONSIVE) ================= */
+/* ================= MODAL & QUICK CHIPS CONFIGURATION ================= */
 .modal-backdrop {
   position: fixed;
   inset: 0;

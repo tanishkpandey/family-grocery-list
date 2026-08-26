@@ -2,6 +2,7 @@
  * Family Grocery List - Client Application Logic
  * Ultra-lightweight vanilla JS with Server-Sent Events (SSE) realtime collaboration.
  * Features:
+ *  - Offline Detection & Warning Banner with Auto-Recovery
  *  - Reliable Enter Key submission for both Item Name and Quantity on Mobile & Desktop
  *  - Configurable Quick Add Items with Local Storage Persistence & Modal Editor
  *  - Consistent Typography with Plus Jakarta Sans & Outfit
@@ -60,8 +61,12 @@
   let eventSource = null;
   const pendingDeletes = new Map();
   let hadItems = false;
+  let isOffline = !navigator.onLine;
 
   // --- DOM ELEMENTS ---
+  const offlineBanner = document.getElementById('offline-banner');
+  const offlineBannerText = document.getElementById('offline-banner-text');
+
   const viewDashboard = document.getElementById('view-dashboard');
   const viewList = document.getElementById('view-list');
 
@@ -131,6 +136,43 @@
 
   // Toast
   const toastContainer = document.getElementById('toast-container');
+
+  // --- OFFLINE / ONLINE DETECTION ---
+  let onlineRecoverTimer = null;
+
+  function setOfflineState(offline) {
+    isOffline = offline;
+
+    if (offline) {
+      if (onlineRecoverTimer) clearTimeout(onlineRecoverTimer);
+      offlineBanner.classList.remove('hidden', 'online-recovered');
+      offlineBannerText.textContent = 'You are offline (इंटरनेट बंद है). Live sync is unavailable — please reconnect to use the app.';
+      if (presenceLabelEl) presenceLabelEl.textContent = 'Offline';
+    } else {
+      offlineBanner.classList.remove('hidden');
+      offlineBanner.classList.add('online-recovered');
+      offlineBannerText.textContent = '✅ Back online! Syncing your shopping lists...';
+
+      if (currentList) {
+        connectRealtime(currentList.id);
+        fetchListDetails(currentList.id);
+      } else {
+        fetchAllLists().then(() => renderDashboardLists());
+      }
+
+      onlineRecoverTimer = setTimeout(() => {
+        offlineBanner.classList.add('hidden');
+        offlineBanner.classList.remove('online-recovered');
+      }, 2500);
+    }
+  }
+
+  window.addEventListener('offline', () => setOfflineState(true));
+  window.addEventListener('online', () => setOfflineState(false));
+
+  if (!navigator.onLine) {
+    setOfflineState(true);
+  }
 
   // --- ROUTING ---
   function getListIdFromUrl() {
@@ -448,6 +490,11 @@
 
   formCreateList.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (!navigator.onLine) {
+      showToast('You are offline. Reconnect to create lists.');
+      return;
+    }
+
     const title = inputNewListTitle.value.trim();
     if (!title) return;
 
@@ -484,6 +531,13 @@
     viewList.classList.remove('hidden');
     viewList.classList.add('view-entering');
 
+    await fetchListDetails(identifier);
+    if (currentList) {
+      connectRealtime(currentList.id);
+    }
+  }
+
+  async function fetchListDetails(identifier) {
     try {
       const res = await fetch(`/api/lists/${identifier}`);
       if (!res.ok) {
@@ -499,10 +553,11 @@
 
       renderListHeader();
       renderGroceryItems();
-      connectRealtime(currentList.id);
     } catch (err) {
       console.error(err);
-      showToast('Network error.');
+      if (!navigator.onLine) {
+        setOfflineState(true);
+      }
     }
   }
 
@@ -528,6 +583,11 @@
       'This will remove this shopping list and all items.',
       'Delete List',
       async () => {
+        if (!navigator.onLine) {
+          showToast('You are offline. Reconnect to delete list.');
+          return;
+        }
+
         allLists = allLists.filter((l) => l.id !== listObj.id && l.share_token !== listObj.share_token);
         renderDashboardLists();
         showToast(`Deleted "${listObj.title || 'List'}"`);
@@ -607,6 +667,11 @@
   });
 
   const saveTitle = async () => {
+    if (!navigator.onLine) {
+      showToast('You are offline. Reconnect to rename list.');
+      return;
+    }
+
     const newTitle = inputTitleEdit.value.trim();
     if (!newTitle || !currentList) return;
 
@@ -705,6 +770,9 @@
     eventSource.onerror = () => {
       avatarStackEl.innerHTML = '';
       presenceLabelEl.textContent = 'Offline';
+      if (!navigator.onLine) {
+        setOfflineState(true);
+      }
     };
 
     eventSource.addEventListener('presence', (e) => {
@@ -890,6 +958,11 @@
     const btnSave = editCard.querySelector('.btn-save');
 
     const saveChanges = async () => {
+      if (!navigator.onLine) {
+        showToast('You are offline. Reconnect to edit items.');
+        return;
+      }
+
       const newName = nameInput.value.trim();
       const newQty = qtyInput.value.trim() || null;
       if (!newName) return;
@@ -928,6 +1001,11 @@
 
   // --- ACTIONS ---
   async function toggleItem(itemId, completed) {
+    if (!navigator.onLine) {
+      showToast('You are offline. Reconnect to update items.');
+      return;
+    }
+
     const item = items.find((i) => i.id === itemId);
     if (!item) return;
 
@@ -948,6 +1026,11 @@
   }
 
   async function deleteItem(itemId) {
+    if (!navigator.onLine) {
+      showToast('You are offline. Reconnect to delete items.');
+      return;
+    }
+
     const itemIndex = items.findIndex((i) => i.id === itemId);
     if (itemIndex === -1) return;
 
@@ -988,6 +1071,11 @@
   }
 
   btnClearPurchasedInline.addEventListener('click', async () => {
+    if (!navigator.onLine) {
+      showToast('You are offline. Reconnect to clear items.');
+      return;
+    }
+
     if (!currentList) return;
     const completed = items.filter((i) => i.completed);
     if (completed.length === 0) {
@@ -1035,6 +1123,11 @@
   const handleAddItemSubmit = async (e) => {
     if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
+    }
+
+    if (!navigator.onLine) {
+      showToast('You are offline. Please reconnect to add items.');
+      return;
     }
 
     const name = inputItemName.value.trim();
