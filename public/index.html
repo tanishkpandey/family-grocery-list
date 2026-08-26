@@ -9,7 +9,7 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
 
-  <!-- Google Fonts: Plus Jakarta Sans (Body & UI) & Outfit (Headers) & Noto Sans Devanagari (Hindi) -->
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit & Noto Sans Devanagari -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@500;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -175,15 +175,15 @@
 
       </main>
 
-      <!-- Sticky Bottom Add Item Bar -->
+      <!-- Sticky Bottom Add Item Bar (Form encloses both name and quantity) -->
       <footer class="add-bar-sticky">
-        <div class="add-bar-inner">
+        <form id="form-add-item" class="add-form-container">
           <div id="qty-row" class="qty-row hidden">
-            <input type="text" id="input-item-qty" placeholder="Quantity (e.g. 2 pkts, 1 kg, आधा किलो)" maxLength="100" class="input-qty" />
+            <input type="text" id="input-item-qty" placeholder="Quantity (e.g. 2 pkts, 1 kg, आधा किलो)" maxLength="100" autocomplete="off" class="input-qty" />
             <button id="btn-close-qty" class="btn-close-qty" type="button">Cancel</button>
           </div>
 
-          <form id="form-add-item" class="add-form">
+          <div class="add-form-row">
             <div class="input-wrapper">
               <input type="text" id="input-item-name" placeholder="Add item (दाल, Dahi, Sabzi)..." maxLength="200" autocomplete="off" class="input-name" />
               <button id="btn-toggle-qty" type="button" class="btn-toggle-qty">+ qty</button>
@@ -195,8 +195,8 @@
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
 
         <!-- Footer Credit in List View -->
         <p class="footer-credit-mini">Made by Tanishk with love ❤️</p>

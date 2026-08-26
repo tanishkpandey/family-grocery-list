@@ -630,7 +630,7 @@ h1, h2, h3, h4, .dashboard-title, .list-title, .modal-title {
 /* Main items list */
 .list-main {
   flex: 1;
-  padding-bottom: calc(110px + var(--safe-bottom));
+  padding-bottom: calc(120px + var(--safe-bottom));
 }
 
 .item-section {
@@ -925,7 +925,7 @@ h1, h2, h3, h4, .dashboard-title, .list-title, .modal-title {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(244, 238, 255, 0.95);
+  background: rgba(244, 238, 255, 0.96);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-top: 1.5px solid var(--border-color);
@@ -933,23 +933,26 @@ h1, h2, h3, h4, .dashboard-title, .list-title, .modal-title {
   z-index: 100;
 }
 
-.add-bar-inner {
+.add-form-container {
   max-width: 650px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
 }
 
 .qty-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  animation: fadeIn 0.15s ease forwards;
 }
 
 .input-qty {
   font-family: var(--font-body);
-  width: 100%;
+  flex: 1;
   height: 40px;
   padding: 0 12px;
   font-size: 14px;
@@ -975,10 +978,11 @@ h1, h2, h3, h4, .dashboard-title, .list-title, .modal-title {
   cursor: pointer;
 }
 
-.add-form {
+.add-form-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
 }
 
 .input-wrapper {

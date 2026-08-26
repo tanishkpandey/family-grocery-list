@@ -2,6 +2,7 @@
  * Family Grocery List - Client Application Logic
  * Ultra-lightweight vanilla JS with Server-Sent Events (SSE) realtime collaboration.
  * Features:
+ *  - Reliable Enter Key submission for both Item Name and Quantity on Mobile & Desktop
  *  - Configurable Quick Add Items with Local Storage Persistence & Modal Editor
  *  - Consistent Typography with Plus Jakarta Sans & Outfit
  *  - Smooth Page Transitions
@@ -1030,9 +1031,12 @@
     );
   });
 
-  // --- ADD ITEM SUBMISSION ---
-  formAddItem.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  // --- ADD ITEM SUBMISSION (Instant Enter Key Handling) ---
+  const handleAddItemSubmit = async (e) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+
     const name = inputItemName.value.trim();
     const quantity = inputItemQty.value.trim() || null;
     if (!name || !currentList) return;
@@ -1075,6 +1079,23 @@
       items = items.filter((i) => i.id !== itemId);
       renderGroceryItems();
       showToast("Couldn't add item.");
+    }
+  };
+
+  formAddItem.addEventListener('submit', handleAddItemSubmit);
+
+  // Reliable Enter key handling on both inputs across mobile keyboards and physical keyboards
+  inputItemName.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddItemSubmit(e);
+    }
+  });
+
+  inputItemQty.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddItemSubmit(e);
     }
   });
 
