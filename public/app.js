@@ -2,10 +2,11 @@
  * Family Grocery List - Client Application Logic
  * Ultra-lightweight vanilla JS with Server-Sent Events (SSE) realtime collaboration.
  * Features:
+ *  - Smooth Page Transitions
+ *  - Auto-Delete Empty List & Auto-Redirect to Home when all items are deleted
  *  - Emoji Presence Avatars (🦚, 🪷, 🐘, 🥭, 🫖, 🐯, 🥥, 🪔, 🌻)
  *  - Indian Cultural Household Grocery Chips
- *  - Lists-First Dashboard (Opening app shows lists directly)
- *  - Direct List Delete on list card and in list header
+ *  - Lists-First Dashboard with unique names and direct deletion
  *  - Footer: Made by Tanishk with love ❤️
  *  - Custom Theme Palette: #F4EEFF, #DCD6F7, #A6B1E1, #424874
  */
@@ -19,6 +20,7 @@
   let allLists = [];
   let eventSource = null;
   const pendingDeletes = new Map();
+  let hadItems = false; // Tracks if list had items so we auto-delete when empty
 
   // --- DOM ELEMENTS ---
   const viewDashboard = document.getElementById('view-dashboard');
@@ -146,16 +148,22 @@
     }
   }
 
-  // --- STATE A: DASHBOARD VIEW (FIRST THING SEEN) ---
+  // --- STATE A: DASHBOARD VIEW (FIRST THING SEEN WITH SMOOTH TRANSITION) ---
   async function showDashboardView() {
     viewDashboard.classList.remove('hidden');
+    viewDashboard.classList.add('view-entering');
     viewList.classList.add('hidden');
+    viewList.classList.remove('view-entering');
     formNewListCard.classList.add('hidden');
 
     if (eventSource) {
       eventSource.close();
       eventSource = null;
     }
+
+    currentList = null;
+    items = [];
+    hadItems = false;
 
     dashboardListsContainer.innerHTML = '<div class="loading-hint">Loading your shopping lists...</div>';
     await fetchAllLists();
@@ -297,10 +305,12 @@
     }
   });
 
-  // --- STATE B: LIST VIEW ---
+  // --- STATE B: LIST VIEW (WITH SMOOTH PAGE TRANSITION) ---
   async function showListView(identifier) {
     viewDashboard.classList.add('hidden');
+    viewDashboard.classList.remove('view-entering');
     viewList.classList.remove('hidden');
+    viewList.classList.add('view-entering');
 
     try {
       const res = await fetch(`/api/lists/${identifier}`);
@@ -313,6 +323,7 @@
 
       currentList = await res.json();
       items = currentList.items || [];
+      hadItems = items.length > 0;
 
       renderListHeader();
       renderGroceryItems();
@@ -363,6 +374,31 @@
         }
       }
     );
+  }
+
+  // --- CHECK & AUTO-DELETE EMPTY LIST AND REDIRECT HOME ---
+  async function checkEmptyListAutoDelete() {
+    if (!currentList) return;
+
+    // Only auto-delete if the list is completely empty and had items or user emptied it
+    if (items.length === 0 && hadItems && pendingDeletes.size === 0) {
+      const listToDelete = currentList;
+      showToast(`Empty list "${listToDelete.title}" deleted.`);
+
+      try {
+        await fetch(`/api/lists/${listToDelete.id}`, {
+          method: 'DELETE',
+        });
+      } catch (err) {
+        console.warn('Auto delete error:', err);
+      }
+
+      // Smoothly redirect to home dashboard
+      setTimeout(() => {
+        window.history.pushState(null, '', '/');
+        showDashboardView();
+      }, 500);
+    }
   }
 
   // --- MODAL ---
@@ -511,6 +547,7 @@
       const exists = items.some((i) => i.id === newItem.id);
       if (!exists) {
         items.push(newItem);
+        hadItems = true;
         renderGroceryItems();
       }
     });
@@ -525,12 +562,18 @@
       const { id } = JSON.parse(e.data);
       items = items.filter((i) => i.id !== id);
       renderGroceryItems();
+      if (items.length === 0 && hadItems) {
+        checkEmptyListAutoDelete();
+      }
     });
 
     eventSource.addEventListener('items_cleared', (e) => {
       const data = JSON.parse(e.data);
       items = data.items || [];
       renderGroceryItems();
+      if (items.length === 0 && hadItems) {
+        checkEmptyListAutoDelete();
+      }
     });
 
     eventSource.addEventListener('list_updated', (e) => {
@@ -741,6 +784,8 @@
     const [deletedItem] = items.splice(itemIndex, 1);
     renderGroceryItems();
 
+    const isNowEmpty = items.length === 0;
+
     const timer = setTimeout(async () => {
       pendingDeletes.delete(itemId);
       try {
@@ -750,7 +795,12 @@
       } catch (err) {
         console.error(err);
       }
-    }, 4000);
+
+      // If list is empty after undo window expires, auto-delete and redirect home
+      if (isNowEmpty) {
+        checkEmptyListAutoDelete();
+      }
+    }, 3000);
 
     const toastEl = showToast(
       `Deleted ${deletedItem.name}`,
@@ -759,9 +809,10 @@
         clearTimeout(timer);
         pendingDeletes.delete(itemId);
         items.push(deletedItem);
+        hadItems = true;
         renderGroceryItems();
       },
-      4000
+      3000
     );
 
     pendingDeletes.set(itemId, { item: deletedItem, timer, toastEl });
@@ -779,7 +830,9 @@
     items = items.filter((i) => !i.completed);
     renderGroceryItems();
 
+    const isNowEmpty = items.length === 0;
     let undone = false;
+
     const timer = setTimeout(async () => {
       if (undone) return;
       try {
@@ -789,7 +842,11 @@
       } catch (err) {
         console.error(err);
       }
-    }, 4000);
+
+      if (isNowEmpty) {
+        checkEmptyListAutoDelete();
+      }
+    }, 3000);
 
     showToast(
       `Cleared ${completed.length} items`,
@@ -798,9 +855,10 @@
         undone = true;
         clearTimeout(timer);
         items = previousItems;
+        hadItems = true;
         renderGroceryItems();
       },
-      4000
+      3000
     );
   });
 
@@ -831,6 +889,7 @@
     };
 
     items.push(newItem);
+    hadItems = true;
     renderGroceryItems();
 
     try {

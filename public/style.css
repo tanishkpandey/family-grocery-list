@@ -37,14 +37,32 @@ body {
   min-height: 100dvh;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
+/* Smooth Page Transitions */
 .view-container {
   width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.view-container.view-entering {
+  animation: pageEnter 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pageEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hidden {
@@ -148,7 +166,7 @@ body {
   padding: 14px;
   margin-bottom: 20px;
   box-shadow: 0 6px 20px rgba(66, 72, 116, 0.1);
-  animation: fadeIn 0.15s ease forwards;
+  animation: fadeIn 0.18s ease forwards;
 }
 
 .create-list-form {
@@ -190,7 +208,7 @@ body {
   gap: 12px;
 }
 
-/* List Card */
+/* List Card with Smooth Hover & Transitions */
 .list-card {
   background: var(--bg-surface);
   border: 1.5px solid var(--border-color);
@@ -201,14 +219,18 @@ body {
   justify-content: space-between;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(66, 72, 116, 0.04);
-  transition: all 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
   gap: 12px;
 }
 
 .list-card:hover {
   border-color: var(--accent-primary);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(66, 72, 116, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(66, 72, 116, 0.09);
+}
+
+.list-card:active {
+  transform: scale(0.99);
 }
 
 .list-card-content {
@@ -334,6 +356,7 @@ body {
 
 .btn-back-lists:hover {
   background: #CDC5F0;
+  transform: translateX(-2px);
 }
 
 .title-display-wrap {
@@ -541,7 +564,7 @@ body {
   white-space: nowrap;
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(66, 72, 116, 0.05);
-  transition: all 0.12s ease;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .quick-chip:hover {
@@ -562,6 +585,7 @@ body {
 
 .item-section {
   margin-bottom: 24px;
+  animation: fadeIn 0.2s ease forwards;
 }
 
 .section-label {
@@ -621,7 +645,7 @@ body {
   gap: 8px;
 }
 
-/* Grocery Row Item */
+/* Grocery Row Item with Smooth Transitions */
 .grocery-row {
   display: flex;
   align-items: center;
@@ -631,7 +655,8 @@ body {
   border-radius: var(--radius-md);
   padding: 4px 12px 4px 4px;
   box-shadow: 0 2px 6px rgba(66, 72, 116, 0.03);
-  transition: border-color 0.15s ease, opacity 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .grocery-row.completed {
@@ -650,7 +675,7 @@ body {
   color: var(--text-muted);
 }
 
-/* Checkbox Button (Minimum 44x44px touch area) */
+/* Checkbox Button */
 .checkbox-btn {
   width: 44px;
   height: 44px;
@@ -742,6 +767,7 @@ body {
   flex-direction: column;
   gap: 8px;
   box-shadow: 0 4px 16px rgba(66, 72, 116, 0.1);
+  animation: fadeIn 0.15s ease forwards;
 }
 
 .edit-inputs {
@@ -818,6 +844,7 @@ body {
   border-radius: var(--radius-lg);
   background: rgba(220, 214, 247, 0.25);
   cursor: pointer;
+  animation: fadeIn 0.25s ease forwards;
 }
 
 .empty-emoji {
@@ -995,8 +1022,8 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .modal-card {
