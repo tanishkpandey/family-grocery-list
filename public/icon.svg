@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#424874" />
+      <stop offset="100%" stop-color="#2D3256" />
+    </linearGradient>
+    <linearGradient id="basketGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F4EEFF" />
+      <stop offset="100%" stop-color="#DCD6F7" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A6B1E1" />
+      <stop offset="100%" stop-color="#8E97C6" />
+    </linearGradient>
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#1E223D" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+
+  <!-- Inner Soft Glow -->
+  <rect x="16" y="16" width="480" height="480" rx="116" fill="none" stroke="rgba(244, 238, 255, 0.15)" stroke-width="4" />
+
+  <!-- Grocery Basket Illustration Group -->
+  <g filter="url(#dropShadow)" transform="translate(0, -6)">
+    <!-- Basket Handle Arc -->
+    <path d="M176 240 C176 150, 336 150, 336 240" fill="none" stroke="url(#accentGrad)" stroke-width="26" stroke-linecap="round" />
+
+    <!-- Fresh Goods in Basket (Milk Bottle, Carrot/Leaf, Bread) -->
+    <!-- Milk Bottle -->
+    <rect x="195" y="170" width="46" height="80" rx="10" fill="#FFFFFF" opacity="0.95" />
+    <rect x="206" y="152" width="24" height="20" rx="4" fill="#A6B1E1" />
+    <circle cx="218" cy="205" r="10" fill="#DCD6F7" />
+
+    <!-- Green Herb / Leaf -->
+    <path d="M295 160 C325 170, 335 205, 305 230 C285 205, 275 180, 295 160 Z" fill="#2A9D8F" />
+    <path d="M270 175 C295 185, 300 215, 275 235 C260 215, 250 195, 270 175 Z" fill="#48CAE4" opacity="0.85" />
+
+    <!-- Main Woven Basket Body -->
+    <path d="M136 240 L376 240 C364 350, 340 376, 256 376 C172 376, 148 350, 136 240 Z" fill="url(#basketGrad)" />
+
+    <!-- Basket Rim -->
+    <rect x="124" y="230" width="264" height="24" rx="12" fill="#FFFFFF" />
+
+    <!-- Weave Pattern Details -->
+    <path d="M176 260 L196 356 M256 260 L256 364 M336 260 L316 356" stroke="rgba(66, 72, 116, 0.25)" stroke-width="8" stroke-linecap="round" />
+    <path d="M148 296 Q256 312 364 296 M164 336 Q256 352 348 336" stroke="rgba(66, 72, 116, 0.25)" stroke-width="8" stroke-linecap="round" />
+  </g>
+
+  <!-- Indian Touch Tiny Sparkle / Diya Element -->
+  <circle cx="370" cy="140" r="10" fill="#F4EEFF" opacity="0.8" />
+  <circle cx="396" cy="166" r="6" fill="#A6B1E1" opacity="0.9" />
+</svg>

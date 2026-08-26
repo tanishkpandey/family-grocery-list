@@ -1,0 +1,17 @@
+{
+  "name": "Ghar Ki Rasoi • Family Grocery List",
+  "short_name": "Ghar Ration",
+  "description": "Shared household grocery notepad for Indian families with instant realtime sync.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4EEFF",
+  "theme_color": "#424874",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
