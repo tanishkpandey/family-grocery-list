@@ -2,10 +2,12 @@
  * Family Grocery List - Client Application Logic
  * Ultra-lightweight vanilla JS with Server-Sent Events (SSE) realtime collaboration.
  * Features:
+ *  - Configurable Quick Add Items with Local Storage Persistence & Modal Editor
+ *  - Consistent Typography with Plus Jakarta Sans & Outfit
  *  - Smooth Page Transitions
  *  - Auto-Delete Empty List & Auto-Redirect to Home when all items are deleted
  *  - Emoji Presence Avatars (🦚, 🪷, 🐘, 🥭, 🫖, 🐯, 🥥, 🪔, 🌻)
- *  - Indian Cultural Household Grocery Chips
+ *  - Indian Cultural Household Grocery Elements
  *  - Lists-First Dashboard with unique names and direct deletion
  *  - Footer: Made by Tanishk with love ❤️
  *  - Custom Theme Palette: #F4EEFF, #DCD6F7, #A6B1E1, #424874
@@ -14,13 +16,49 @@
 (function () {
   'use strict';
 
+  // --- DEFAULT QUICK ADD CHIPS ---
+  const DEFAULT_QUICK_CHIPS = [
+    { label: '🥛 Doodh', item: 'Milk (दूध)', qty: '2 pkts' },
+    { label: '☕ Chai', item: 'Chai Patti', qty: '500g' },
+    { label: '🌾 Atta', item: 'Atta / Chawal', qty: '5 kg' },
+    { label: '🥣 Dahi', item: 'Dahi (Curd)', qty: '1 pkt' },
+    { label: '🧈 Paneer', item: 'Paneer', qty: '250g' },
+    { label: '🧅 Aloo-Pyaaz', item: 'Pyaaz / Aloo', qty: '2 kg' },
+    { label: '🌿 Dhaniya', item: 'Dhaniya / Mirchi', qty: '1 bunch' },
+  ];
+
+  let quickChips = [];
+
+  function loadQuickChips() {
+    try {
+      const saved = localStorage.getItem('family_quick_chips');
+      if (saved) {
+        quickChips = JSON.parse(saved);
+        if (Array.isArray(quickChips) && quickChips.length > 0) return;
+      }
+    } catch (e) {
+      console.warn('Could not load saved chips:', e);
+    }
+    quickChips = [...DEFAULT_QUICK_CHIPS];
+  }
+
+  function saveQuickChips() {
+    try {
+      localStorage.setItem('family_quick_chips', JSON.stringify(quickChips));
+    } catch (e) {
+      console.warn('Could not save chips:', e);
+    }
+  }
+
+  loadQuickChips();
+
   // --- STATE ---
   let currentList = null;
   let items = [];
   let allLists = [];
   let eventSource = null;
   const pendingDeletes = new Map();
-  let hadItems = false; // Tracks if list had items so we auto-delete when empty
+  let hadItems = false;
 
   // --- DOM ELEMENTS ---
   const viewDashboard = document.getElementById('view-dashboard');
@@ -69,7 +107,18 @@
   const qtyRow = document.getElementById('qty-row');
   const btnToggleQty = document.getElementById('btn-toggle-qty');
   const btnCloseQty = document.getElementById('btn-close-qty');
-  const quickChips = document.querySelectorAll('.quick-chip');
+  const quickChipsListEl = document.getElementById('quick-chips-list');
+  const btnConfigChips = document.getElementById('btn-config-chips');
+
+  // Quick Chips Config Modal
+  const modalChipsConfig = document.getElementById('modal-chips-config');
+  const btnCloseChipsConfig = document.getElementById('btn-close-chips-config');
+  const btnDoneChipsConfig = document.getElementById('btn-done-chips-config');
+  const configChipsManageList = document.getElementById('config-chips-manage-list');
+  const formAddCustomChip = document.getElementById('form-add-custom-chip');
+  const inputChipLabel = document.getElementById('input-chip-label');
+  const inputChipQty = document.getElementById('input-chip-qty');
+  const btnResetChips = document.getElementById('btn-reset-chips');
 
   // Modal
   const modalBackdrop = document.getElementById('modal-backdrop');
@@ -95,6 +144,7 @@
   }
 
   function initApp() {
+    renderQuickChipsBar();
     const listId = getListIdFromUrl();
     if (listId) {
       showListView(listId);
@@ -136,6 +186,128 @@
     return toast;
   }
 
+  // --- QUICK ADD CHIPS RENDERING & MANAGEMENT ---
+  function renderQuickChipsBar() {
+    if (!quickChipsListEl) return;
+    quickChipsListEl.innerHTML = '';
+
+    quickChips.forEach((chip) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'quick-chip';
+      btn.textContent = chip.label || chip.item;
+      btn.title = chip.qty ? `Add ${chip.item} (${chip.qty})` : `Add ${chip.item}`;
+
+      btn.onclick = () => {
+        inputItemName.value = chip.item || chip.label;
+        if (chip.qty) {
+          inputItemQty.value = chip.qty;
+          qtyRow.classList.remove('hidden');
+        }
+        inputItemName.focus();
+      };
+
+      quickChipsListEl.appendChild(btn);
+    });
+  }
+
+  function openChipsConfigModal() {
+    renderConfigChipsManageList();
+    modalChipsConfig.classList.remove('hidden');
+  }
+
+  function closeChipsConfigModal() {
+    modalChipsConfig.classList.add('hidden');
+    renderQuickChipsBar();
+  }
+
+  function renderConfigChipsManageList() {
+    configChipsManageList.innerHTML = '';
+
+    quickChips.forEach((chip, index) => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'config-chip-item';
+
+      const labelSpan = document.createElement('span');
+      labelSpan.textContent = chip.label || chip.item;
+      itemEl.appendChild(labelSpan);
+
+      if (chip.qty) {
+        const qtySpan = document.createElement('span');
+        qtySpan.className = 'config-chip-qty';
+        qtySpan.textContent = chip.qty;
+        itemEl.appendChild(qtySpan);
+      }
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'btn-remove-chip';
+      removeBtn.setAttribute('aria-label', `Remove ${chip.label}`);
+      removeBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      `;
+      removeBtn.onclick = () => {
+        quickChips.splice(index, 1);
+        saveQuickChips();
+        renderConfigChipsManageList();
+        renderQuickChipsBar();
+      };
+
+      itemEl.appendChild(removeBtn);
+      configChipsManageList.appendChild(itemEl);
+    });
+  }
+
+  if (btnConfigChips) {
+    btnConfigChips.onclick = openChipsConfigModal;
+  }
+  if (btnCloseChipsConfig) {
+    btnCloseChipsConfig.onclick = closeChipsConfigModal;
+  }
+  if (btnDoneChipsConfig) {
+    btnDoneChipsConfig.onclick = closeChipsConfigModal;
+  }
+  if (modalChipsConfig) {
+    modalChipsConfig.onclick = (e) => {
+      if (e.target === modalChipsConfig) closeChipsConfigModal();
+    };
+  }
+
+  if (formAddCustomChip) {
+    formAddCustomChip.onsubmit = (e) => {
+      e.preventDefault();
+      const label = inputChipLabel.value.trim();
+      const qty = inputChipQty.value.trim();
+      if (!label) return;
+
+      quickChips.push({
+        label: label,
+        item: label,
+        qty: qty || null,
+      });
+
+      saveQuickChips();
+      inputChipLabel.value = '';
+      inputChipQty.value = '';
+      renderConfigChipsManageList();
+      renderQuickChipsBar();
+      showToast(`Added shortcut "${label}"`);
+    };
+  }
+
+  if (btnResetChips) {
+    btnResetChips.onclick = () => {
+      quickChips = [...DEFAULT_QUICK_CHIPS];
+      saveQuickChips();
+      renderConfigChipsManageList();
+      renderQuickChipsBar();
+      showToast('Reset quick chips to defaults');
+    };
+  }
+
   // --- FETCH ALL LISTS ---
   async function fetchAllLists() {
     try {
@@ -148,7 +320,7 @@
     }
   }
 
-  // --- STATE A: DASHBOARD VIEW (FIRST THING SEEN WITH SMOOTH TRANSITION) ---
+  // --- STATE A: DASHBOARD VIEW ---
   async function showDashboardView() {
     viewDashboard.classList.remove('hidden');
     viewDashboard.classList.add('view-entering');
@@ -193,7 +365,7 @@
 
       const targetId = list.share_token || list.id;
 
-      // Card Main Content (Click opens list)
+      // Card Main Content
       const content = document.createElement('div');
       content.className = 'list-card-content';
 
@@ -227,7 +399,7 @@
 
       card.appendChild(content);
 
-      // Card Action Buttons (Direct Delete on the list card itself)
+      // Card Action Buttons (Direct Delete on the list card)
       const actions = document.createElement('div');
       actions.className = 'list-card-actions';
 
@@ -278,7 +450,6 @@
     const title = inputNewListTitle.value.trim();
     if (!title) return;
 
-    // Check for duplicate name locally
     const exists = allLists.some((l) => l.title.trim().toLowerCase() === title.toLowerCase());
     if (exists) {
       showToast(`Opening existing list "${title}"`);
@@ -305,7 +476,7 @@
     }
   });
 
-  // --- STATE B: LIST VIEW (WITH SMOOTH PAGE TRANSITION) ---
+  // --- STATE B: LIST VIEW ---
   async function showListView(identifier) {
     viewDashboard.classList.add('hidden');
     viewDashboard.classList.remove('view-entering');
@@ -380,7 +551,6 @@
   async function checkEmptyListAutoDelete() {
     if (!currentList) return;
 
-    // Only auto-delete if the list is completely empty and had items or user emptied it
     if (items.length === 0 && hadItems && pendingDeletes.size === 0) {
       const listToDelete = currentList;
       showToast(`Empty list "${listToDelete.title}" deleted.`);
@@ -393,7 +563,6 @@
         console.warn('Auto delete error:', err);
       }
 
-      // Smoothly redirect to home dashboard
       setTimeout(() => {
         window.history.pushState(null, '', '/');
         showDashboardView();
@@ -796,7 +965,6 @@
         console.error(err);
       }
 
-      // If list is empty after undo window expires, auto-delete and redirect home
       if (isNowEmpty) {
         checkEmptyListAutoDelete();
       }
@@ -908,20 +1076,6 @@
       renderGroceryItems();
       showToast("Couldn't add item.");
     }
-  });
-
-  // Quick Indian Suggestions chips click handler
-  quickChips.forEach((chip) => {
-    chip.addEventListener('click', () => {
-      const itemName = chip.getAttribute('data-item');
-      const itemQty = chip.getAttribute('data-qty');
-      inputItemName.value = itemName;
-      if (itemQty) {
-        inputItemQty.value = itemQty;
-        qtyRow.classList.remove('hidden');
-      }
-      inputItemName.focus();
-    });
   });
 
   // Quantity toggling

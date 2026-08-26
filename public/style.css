@@ -1,5 +1,6 @@
 /* ==========================================================================
    Family Grocery List - Palette: #F4EEFF, #DCD6F7, #A6B1E1, #424874
+   Consistent Typography: Outfit (Headings) + Plus Jakarta Sans (UI & Body)
    Indian Cultural Elements & Clean Minimalist Household Notepad
    ========================================================================== */
 
@@ -18,7 +19,12 @@
   --radius-lg: 18px;
   --radius-md: 14px;
   --radius-sm: 10px;
-  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* 2 Consistent, Beautiful Font Families */
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  --font-hindi: 'Noto Sans Devanagari', 'Plus Jakarta Sans', sans-serif;
+
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -30,14 +36,23 @@
 }
 
 body {
-  font-family: var(--font-family);
+  font-family: var(--font-body);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
   min-height: 100dvh;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .dashboard-title, .list-title, .modal-title {
+  font-family: var(--font-heading);
+}
+
+.brand-badge-hindi {
+  font-family: var(--font-hindi);
 }
 
 /* Smooth Page Transitions */
@@ -96,8 +111,8 @@ body {
 }
 
 .app-icon-mini {
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   background-color: var(--accent-dark);
   color: #F4EEFF;
   border-radius: 14px;
@@ -108,13 +123,13 @@ body {
 }
 
 .brand-emoji {
-  font-size: 22px;
+  font-size: 24px;
 }
 
 .brand-badge-hindi {
   font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   color: var(--accent-dark);
   background: var(--bg-subtle);
   padding: 1px 8px;
@@ -124,7 +139,7 @@ body {
 }
 
 .dashboard-title {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -138,6 +153,7 @@ body {
 }
 
 .btn-create-compact {
+  font-family: var(--font-body);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -176,6 +192,7 @@ body {
 }
 
 .input-new-list {
+  font-family: var(--font-body);
   width: 100%;
   height: 44px;
   padding: 0 14px;
@@ -248,7 +265,7 @@ body {
 }
 
 .list-card-title {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
@@ -257,6 +274,7 @@ body {
 }
 
 .list-card-badge {
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 700;
   background: var(--bg-subtle);
@@ -268,6 +286,7 @@ body {
 
 .list-card-previews {
   font-size: 13px;
+  font-weight: 500;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -302,6 +321,7 @@ body {
 
 .loading-hint {
   font-size: 14px;
+  font-weight: 500;
   color: var(--text-muted);
   text-align: center;
   padding: 32px 16px;
@@ -339,6 +359,7 @@ body {
 }
 
 .btn-back-lists {
+  font-family: var(--font-body);
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
@@ -400,6 +421,7 @@ body {
 }
 
 .input-title-edit {
+  font-family: var(--font-heading);
   font-size: 18px;
   font-weight: 700;
   padding: 4px 8px;
@@ -413,6 +435,7 @@ body {
 }
 
 .btn-save-title {
+  font-family: var(--font-body);
   padding: 6px 12px;
   background: var(--accent-dark);
   color: #F4EEFF;
@@ -463,6 +486,7 @@ body {
 }
 
 .presence-avatar.extra {
+  font-family: var(--font-body);
   background: var(--text-secondary);
   font-size: 9px;
   font-weight: 800;
@@ -503,6 +527,7 @@ body {
 }
 
 .btn-share {
+  font-family: var(--font-body);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -524,19 +549,12 @@ body {
   background-color: #33385C;
 }
 
-/* Quick Indian Suggestion Chips */
+/* Configurable Quick Indian Suggestion Chips */
 .quick-chips-container {
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 12px 0 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.quick-chips-container::-webkit-scrollbar {
-  display: none;
 }
 
 .chips-label {
@@ -550,10 +568,19 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: nowrap;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
+.chips-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .quick-chip {
+  font-family: var(--font-body);
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -565,6 +592,7 @@ body {
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(66, 72, 116, 0.05);
   transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
 }
 
 .quick-chip:hover {
@@ -575,6 +603,28 @@ body {
 
 .quick-chip:active {
   transform: scale(0.95);
+}
+
+.btn-config-chips {
+  font-family: var(--font-body);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.btn-config-chips:hover {
+  background: #CDC5F0;
+  border-color: var(--accent-primary);
 }
 
 /* Main items list */
@@ -612,6 +662,7 @@ body {
 }
 
 .btn-text-action {
+  font-family: var(--font-body);
   background: none;
   border: none;
   color: var(--text-secondary);
@@ -631,6 +682,7 @@ body {
 }
 
 .count-badge {
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 700;
   background: var(--bg-subtle);
@@ -782,6 +834,7 @@ body {
 }
 
 .edit-inputs input {
+  font-family: var(--font-body);
   padding: 8px 12px;
   font-size: 15px;
   border: 1.5px solid var(--border-color);
@@ -816,6 +869,7 @@ body {
 }
 
 .btn-cancel {
+  font-family: var(--font-body);
   padding: 6px 12px;
   background: none;
   border: none;
@@ -826,6 +880,7 @@ body {
 }
 
 .btn-save {
+  font-family: var(--font-body);
   padding: 6px 16px;
   background: var(--accent-dark);
   color: #F4EEFF;
@@ -893,6 +948,7 @@ body {
 }
 
 .input-qty {
+  font-family: var(--font-body);
   width: 100%;
   height: 40px;
   padding: 0 12px;
@@ -909,6 +965,7 @@ body {
 }
 
 .btn-close-qty {
+  font-family: var(--font-body);
   background: none;
   border: none;
   color: var(--text-secondary);
@@ -930,6 +987,7 @@ body {
 }
 
 .input-name {
+  font-family: var(--font-body);
   width: 100%;
   height: 52px;
   padding: 0 54px 0 16px;
@@ -949,6 +1007,7 @@ body {
 }
 
 .btn-toggle-qty {
+  font-family: var(--font-body);
   position: absolute;
   right: 10px;
   top: 50%;
@@ -1007,7 +1066,136 @@ body {
   opacity: 0.85;
 }
 
-/* ================= MODAL BACKDROP ================= */
+/* ================= QUICK CHIPS CONFIGURATION MODAL ================= */
+.modal-card-wide {
+  max-width: 440px;
+  gap: 14px;
+}
+
+.modal-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.config-chips-manage-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 4px 2px;
+}
+
+.config-chip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.config-chip-qty {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+.btn-remove-chip {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.btn-remove-chip:hover {
+  color: var(--danger-color);
+  background: #FFF1F2;
+}
+
+.form-add-custom-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-primary);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color);
+}
+
+.custom-chip-inputs {
+  display: flex;
+  gap: 8px;
+}
+
+.input-config-text {
+  font-family: var(--font-body);
+  flex: 1;
+  height: 38px;
+  padding: 0 10px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: #FFFFFF;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.input-config-text:focus {
+  border-color: var(--accent-dark);
+}
+
+.btn-save-chip {
+  font-family: var(--font-body);
+  height: 36px;
+  background: var(--accent-dark);
+  color: #F4EEFF;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.modal-actions-space {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.btn-text-muted {
+  font-family: var(--font-body);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px 0;
+}
+
+.btn-text-muted:hover {
+  color: var(--text-primary);
+}
+
+/* ================= CONFIRMATION MODAL ================= */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1057,6 +1245,7 @@ body {
 }
 
 .btn-modal-cancel {
+  font-family: var(--font-body);
   padding: 8px 16px;
   background: var(--bg-subtle);
   border: 1.5px solid var(--border-color);
@@ -1068,6 +1257,7 @@ body {
 }
 
 .btn-modal-confirm {
+  font-family: var(--font-body);
   padding: 8px 16px;
   background: var(--danger-color);
   border: none;
@@ -1111,6 +1301,7 @@ body {
 }
 
 .btn-toast-action {
+  font-family: var(--font-body);
   background: rgba(244, 238, 255, 0.25);
   color: #F4EEFF;
   border: none;
