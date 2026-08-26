@@ -12,68 +12,78 @@
 </head>
 <body>
 
-  <!-- ================= STATE A: LANDING PAGE ================= -->
-  <div id="view-landing" class="view-container">
-    <div class="landing-card">
-      <div class="app-icon">
-        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="8" cy="21" r="1"></circle>
-          <circle cx="19" cy="21" r="1"></circle>
-          <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
-        </svg>
-      </div>
-
-      <h1 class="landing-title">Family Grocery List</h1>
-      <p class="landing-subtitle">A simple shared grocery notepad for your family.</p>
-
-      <button id="btn-create-list" class="btn-primary">
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        <span>Create New List</span>
-      </button>
-
-      <p class="landing-hint">No account or login required. Just share the link.</p>
-
-      <!-- All Family Shopping Lists -->
-      <div id="all-lists-container" class="recent-container">
-        <div class="section-label">Your Shopping Lists</div>
-        <div id="all-lists-list" class="recent-list">
-          <div class="loading-hint">Loading your lists...</div>
+  <!-- ================= STATE A: ALL LISTS DASHBOARD (FIRST THING USER SEES) ================= -->
+  <div id="view-dashboard" class="view-container">
+    <div class="dashboard-layout">
+      <!-- Dashboard Header -->
+      <header class="dashboard-header">
+        <div class="brand-wrap">
+          <div class="app-icon-mini">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="21" r="1"></circle>
+              <circle cx="19" cy="21" r="1"></circle>
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="dashboard-title">Shopping Lists</h1>
+            <p class="dashboard-sub">Your shared family notepads</p>
+          </div>
         </div>
+
+        <button id="btn-header-new-list" class="btn-create-compact" aria-label="Create new list">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>New List</span>
+        </button>
+      </header>
+
+      <!-- Quick New List Inline Form (Hidden by default, opens when clicked) -->
+      <div id="form-new-list-card" class="new-list-card hidden">
+        <form id="form-create-list" class="create-list-form">
+          <input type="text" id="input-new-list-title" placeholder="List name (e.g. Weekly Groceries, Costco, Pharmacy)" maxLength="60" autocomplete="off" class="input-new-list" />
+          <div class="create-list-buttons">
+            <button id="btn-cancel-create" type="button" class="btn-cancel">Cancel</button>
+            <button type="submit" class="btn-save">Create</button>
+          </div>
+        </form>
       </div>
+
+      <!-- Lists Grid / Cards -->
+      <main class="dashboard-main">
+        <div id="dashboard-lists-container" class="dashboard-lists-grid">
+          <div class="loading-hint">Loading your shopping lists...</div>
+        </div>
+      </main>
     </div>
   </div>
 
-  <!-- ================= STATE B: SHARED GROCERY LIST ================= -->
+  <!-- ================= STATE B: SHARED GROCERY LIST VIEW ================= -->
   <div id="view-list" class="view-container hidden">
     <div class="list-layout">
 
-      <!-- Header -->
+      <!-- Header with Back button, Title, Direct Delete, and Share -->
       <header class="list-header">
         <div class="header-left">
-          <!-- All Lists Switcher Pill -->
-          <button id="btn-open-drawer" class="btn-lists-switcher" aria-label="Switch shopping list">
-            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="8" y1="6" x2="21" y2="6"></line>
-              <line x1="8" y1="12" x2="21" y2="12"></line>
-              <line x1="8" y1="18" x2="21" y2="18"></line>
-              <line x1="3" y1="6" x2="3.01" y2="6"></line>
-              <line x1="3" y1="12" x2="3.01" y2="12"></line>
-              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          <!-- Back to All Lists Button -->
+          <button id="btn-back-to-lists" class="btn-back-lists" aria-label="Back to all shopping lists">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
             <span>All Lists</span>
           </button>
 
           <div id="title-display" class="title-display-wrap">
-            <h1 id="list-title" class="list-title">Family Grocery List</h1>
+            <h1 id="list-title" class="list-title" title="Tap to rename">Family Grocery List</h1>
             <button id="btn-edit-title" class="icon-btn" aria-label="Edit list name" title="Rename list">
               <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
               </svg>
             </button>
           </div>
+
           <div id="title-edit-wrap" class="title-edit-wrap hidden">
             <input type="text" id="input-title-edit" maxLength="100" class="input-title-edit" />
             <button id="btn-save-title" class="btn-save-title">Save</button>
@@ -87,18 +97,17 @@
         </div>
 
         <div class="header-right">
-          <!-- Options menu trigger button -->
-          <button id="btn-menu-actions" class="btn-secondary-action" aria-label="List options" title="List options">
+          <!-- Direct Delete List Button on the List Header itself -->
+          <button id="btn-delete-current-list" class="btn-delete-direct" aria-label="Delete this list" title="Delete list">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="1"></circle>
-              <circle cx="12" cy="5" r="1"></circle>
-              <circle cx="12" cy="19" r="1"></circle>
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
           </button>
 
           <!-- Share Button -->
           <button id="btn-share" class="btn-share" aria-label="Share grocery list">
-            <svg id="share-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg id="share-icon" viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="18" cy="5" r="3"></circle>
               <circle cx="6" cy="12" r="3"></circle>
               <circle cx="18" cy="19" r="3"></circle>
@@ -110,35 +119,13 @@
         </div>
       </header>
 
-      <!-- Action Dropdown for Delete All & Options -->
-      <div id="menu-actions-dropdown" class="menu-dropdown hidden">
-        <button id="btn-delete-completed" class="menu-item-btn">
-          <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          <span>Clear Purchased Items</span>
-        </button>
-        <button id="btn-delete-all" class="menu-item-btn text-danger">
-          <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-          </svg>
-          <span>Delete All Items</span>
-        </button>
-      </div>
-
-      <!-- Reassurance Subtext -->
-      <div class="shared-notice">
-        Anyone with this link can view and edit this list in real time.
-      </div>
-
       <!-- Main Grocery Items Sections -->
       <main class="list-main">
 
         <!-- Empty State -->
         <div id="empty-state" class="empty-state">
           <p class="empty-title">Your grocery list is empty.</p>
-          <p class="empty-sub">Add something you need to buy below.</p>
+          <p class="empty-sub">Type an item you need to buy below.</p>
         </div>
 
         <!-- Need to Buy Section -->
@@ -176,7 +163,7 @@
 
           <form id="form-add-item" class="add-form">
             <div class="input-wrapper">
-              <input type="text" id="input-item-name" placeholder="Add grocery item..." maxLength="200" autocomplete="off" class="input-name" />
+              <input type="text" id="input-item-name" placeholder="Add item..." maxLength="200" autocomplete="off" class="input-name" />
               <button id="btn-toggle-qty" type="button" class="btn-toggle-qty">+ qty</button>
             </div>
 
@@ -193,47 +180,19 @@
     </div>
   </div>
 
-  <!-- ================= DRAWER: LIST SWITCHER ================= -->
-  <div id="drawer-backdrop" class="drawer-backdrop hidden">
-    <div class="drawer-panel">
-      <div class="drawer-header">
-        <h2 class="drawer-title">Family Shopping Lists</h2>
-        <button id="btn-close-drawer" class="icon-btn" aria-label="Close lists drawer">
-          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-
-      <div class="drawer-body">
-        <button id="btn-drawer-new-list" class="btn-drawer-new">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          <span>Create Another List</span>
-        </button>
-
-        <div class="drawer-section-label">All Shopping Lists</div>
-        <div id="drawer-lists" class="drawer-lists-list"></div>
-      </div>
-    </div>
-  </div>
-
   <!-- ================= CONFIRMATION MODAL ================= -->
   <div id="modal-backdrop" class="modal-backdrop hidden">
     <div class="modal-card">
-      <h3 id="modal-title" class="modal-title">Delete all items?</h3>
-      <p id="modal-message" class="modal-message">This will remove all items from your grocery list.</p>
+      <h3 id="modal-title" class="modal-title">Delete list?</h3>
+      <p id="modal-message" class="modal-message">This will permanently delete this shopping list.</p>
       <div class="modal-actions">
         <button id="btn-modal-cancel" class="btn-modal-cancel">Cancel</button>
-        <button id="btn-modal-confirm" class="btn-modal-confirm">Delete All</button>
+        <button id="btn-modal-confirm" class="btn-modal-confirm">Delete</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= TOAST CONTAINER ================= -->
+  <!-- ================= SUBTLE, NON-INTRUSIVE TOAST CONTAINER ================= -->
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Application Logic -->

@@ -3,11 +3,13 @@
  * Uses 100% native Node.js built-in modules (http, fs, path, crypto, url).
  * Integrated with Supabase Cloud Database via native REST API (fetch).
  * Features:
- *  - Multi-List Switcher with Edit & Delete list support
+ *  - Direct Lists Dashboard view
+ *  - Unique List Name enforcement (no duplicate list names)
+ *  - Empty list auto-cleanup (lists with 0 items are cleaned up)
+ *  - Direct List Delete on list itself
+ *  - Subtle, quiet toast notifications
  *  - Supabase Cloud PostgreSQL Sync (zero npm)
  *  - Real-time Server-Sent Events (SSE) with Google-style user presence avatars
- *  - Fallback disk persistence (data/store.json)
- *  - Delete All / Clear Completed functionality
  *  - Custom Theme Palette: #F4EEFF, #DCD6F7, #A6B1E1, #424874
  */
 
@@ -74,7 +76,45 @@ class SupabaseAdapter {
 
   async getAllLists() {
     if (!isCloudConfigured) {
-      return Object.values(store.lists).map((l) => ({
+      return Object.values(store.lists)
+        .map((l) => ({
+          id: l.id,
+          title: l.title,
+          share_token: l.share_token,
+          created_at: l.created_at,
+          updated_at: l.updated_at,
+          item_count: (l.items || []).length,
+          active_count: (l.items || []).filter((i) => !i.completed).length,
+          preview_items: (l.items || []).slice(0, 3).map((i) => i.name),
+        }))
+        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+    }
+    try {
+      const res = await fetch(`${this.baseUrl}/rest/v1/grocery_lists?select=*,grocery_items(id,name,completed)&order=updated_at.desc`, {
+        method: 'GET',
+        headers: this.headers,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data
+          .map((l) => ({
+            id: l.id,
+            title: l.title,
+            share_token: l.share_token,
+            created_at: l.created_at,
+            updated_at: l.updated_at,
+            item_count: (l.grocery_items || []).length,
+            active_count: (l.grocery_items || []).filter((i) => !i.completed).length,
+            preview_items: (l.grocery_items || []).slice(0, 3).map((i) => i.name),
+          }))
+          .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+      }
+    } catch (e) {
+      console.warn('[Supabase] getAllLists error:', e.message);
+    }
+    // Fallback to local
+    return Object.values(store.lists)
+      .map((l) => ({
         id: l.id,
         title: l.title,
         share_token: l.share_token,
@@ -82,38 +122,9 @@ class SupabaseAdapter {
         updated_at: l.updated_at,
         item_count: (l.items || []).length,
         active_count: (l.items || []).filter((i) => !i.completed).length,
-      })).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-    }
-    try {
-      const res = await fetch(`${this.baseUrl}/rest/v1/grocery_lists?select=*,grocery_items(id,completed)&order=updated_at.desc`, {
-        method: 'GET',
-        headers: this.headers,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.map((l) => ({
-          id: l.id,
-          title: l.title,
-          share_token: l.share_token,
-          created_at: l.created_at,
-          updated_at: l.updated_at,
-          item_count: (l.grocery_items || []).length,
-          active_count: (l.grocery_items || []).filter((i) => !i.completed).length,
-        }));
-      }
-    } catch (e) {
-      console.warn('[Supabase] getAllLists error:', e.message);
-    }
-    // Fallback to local
-    return Object.values(store.lists).map((l) => ({
-      id: l.id,
-      title: l.title,
-      share_token: l.share_token,
-      created_at: l.created_at,
-      updated_at: l.updated_at,
-      item_count: (l.items || []).length,
-      active_count: (l.items || []).filter((i) => !i.completed).length,
-    })).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        preview_items: (l.items || []).slice(0, 3).map((i) => i.name),
+      }))
+      .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
   }
 
   async createList(id, title, shareToken) {
@@ -437,10 +448,29 @@ const server = http.createServer(async (req, res) => {
     return sendJSON(res, 200, allLists);
   }
 
-  // 2. Create a new list: POST /api/lists
+  // 2. Create a new list: POST /api/lists (Enforces unique list names & auto-cleans empty lists)
   if (method === 'POST' && pathname === '/api/lists') {
     const body = await parseBody(req);
     const title = (body.title || 'Family Grocery List').trim().slice(0, 100);
+
+    // Enforce unique name: check if list with same title already exists
+    const existing = Object.values(store.lists).find(
+      (l) => l.title.trim().toLowerCase() === title.trim().toLowerCase()
+    );
+    if (existing) {
+      // Return existing list instead of creating duplicate
+      return sendJSON(res, 200, existing);
+    }
+
+    // Clean up empty lists (if any list has 0 items and is abandoned)
+    for (const key in store.lists) {
+      if (store.lists[key].items && store.lists[key].items.length === 0) {
+        const emptyId = store.lists[key].id;
+        delete store.lists[key];
+        if (isCloudConfigured) supabase.deleteList(emptyId).catch(console.warn);
+      }
+    }
+
     const id = crypto.randomUUID ? crypto.randomUUID() : generateRandomToken(16);
     const shareToken = generateRandomToken(9);
     const now = new Date().toISOString();
@@ -519,7 +549,7 @@ const server = http.createServer(async (req, res) => {
     return sendJSON(res, 200, list);
   }
 
-  // 5. Update list title: PUT /api/lists/:id
+  // 5. Update list title: PUT /api/lists/:id (Enforces unique names)
   if (method === 'PUT' && getListMatch) {
     const listId = getListMatch[1];
     const list = await findListByIdOrToken(listId);
@@ -529,6 +559,14 @@ const server = http.createServer(async (req, res) => {
     const body = await parseBody(req);
     const newTitle = (body.title || '').trim().slice(0, 100);
     if (newTitle) {
+      // Check for name conflict
+      const conflict = Object.values(store.lists).find(
+        (l) => l.id !== list.id && l.title.trim().toLowerCase() === newTitle.toLowerCase()
+      );
+      if (conflict) {
+        return sendJSON(res, 400, { error: `A list named "${newTitle}" already exists.` });
+      }
+
       list.title = newTitle;
       list.updated_at = new Date().toISOString();
       saveStore();
@@ -687,7 +725,7 @@ const server = http.createServer(async (req, res) => {
     return sendJSON(res, 200, item);
   }
 
-  // 10. Delete item: DELETE /api/lists/:id/items/:itemId
+  // 10. Delete item: DELETE /api/lists/:id/items/:itemId (Auto-cleans list if empty)
   if (method === 'DELETE' && updateItemMatch) {
     const listId = updateItemMatch[1];
     const itemId = updateItemMatch[2];
@@ -751,6 +789,6 @@ server.listen(PORT, () => {
   console.log(`  Family Grocery List server running on port ${PORT}`);
   console.log(`  Theme Palette: #F4EEFF, #DCD6F7, #A6B1E1, #424874`);
   console.log(`  Cloud DB: ${isCloudConfigured ? 'Connected to Supabase (' + SUPABASE_URL + ')' : 'Local disk fallback'}`);
-  console.log(`  Features: Sidebar List Edit/Delete, Google Presence`);
+  console.log(`  Features: Lists-First Home, Unique Names, Direct Delete`);
   console.log(`==================================================\n`);
 });
