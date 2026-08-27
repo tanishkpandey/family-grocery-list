@@ -392,9 +392,7 @@ function getPresenceUsers(listId) {
     const emojiInfo = PRESENCE_EMOJIS[idx % PRESENCE_EMOJIS.length]
     users.push({
       clientId: client._clientId || `c-${idx}`,
-      name:
-        client._clientName ||
-        (idx === 0 ? "You" : `${emojiInfo.label}`),
+      name: client._clientName || (idx === 0 ? "You" : `${emojiInfo.label}`),
       emoji: emojiInfo.emoji,
       initial: emojiInfo.emoji,
       color: palette.bg,
@@ -744,7 +742,11 @@ const server = http.createServer(async (req, res) => {
     list.updated_at = new Date().toISOString()
     saveStore()
 
-    broadcast(list.id, "items_cleared", { listId: list.id, mode, items: list.items })
+    broadcast(list.id, "items_cleared", {
+      listId: list.id,
+      mode,
+      items: list.items,
+    })
 
     if (isCloudConfigured) {
       supabase.clearItems(list.id, mode).catch(console.warn)
