@@ -58,7 +58,11 @@
   let currentList = null
   let items = []
   let allLists = []
-  let eventSource = null
+  let socket = null
+  let clientId =
+    localStorage.getItem("family_client_id") ||
+    "c_" + Math.random().toString(36).slice(2, 9)
+  localStorage.setItem("family_client_id", clientId)
   let activeFetchId = 0
   const pendingDeletes = new Map()
   let hadItems = false
@@ -165,7 +169,9 @@
         "✅ Back online! Syncing your shopping lists..."
 
       if (currentList) {
-        connectRealtime(currentList.id)
+        if (socket) {
+          socket.emit("join_list", { listId: currentList.id, clientId })
+        }
         fetchListDetails(currentList.id)
       } else {
         fetchAllLists().then(() => renderDashboardLists())
@@ -198,6 +204,7 @@
   }
 
   function initApp() {
+    initSocket()
     renderQuickChipsBar()
     const listId = getListIdFromUrl()
     if (listId) {
@@ -385,9 +392,8 @@
     viewList.classList.remove("view-entering")
     formNewListCard.classList.add("hidden")
 
-    if (eventSource) {
-      eventSource.close()
-      eventSource = null
+    if (socket && currentList) {
+      socket.emit("leave_list", { listId: currentList.id })
     }
 
     currentList = null
@@ -548,9 +554,8 @@
     activeFetchId++
     const fetchId = activeFetchId
 
-    if (eventSource) {
-      eventSource.close()
-      eventSource = null
+    if (socket && currentList) {
+      socket.emit("leave_list", { listId: currentList.id })
     }
 
     currentList = null
@@ -565,8 +570,9 @@
     await fetchListDetails(identifier, fetchId)
     if (fetchId !== activeFetchId) return
 
-    if (currentList) {
-      connectRealtime(currentList.id)
+    if (currentList && socket) {
+      socket.emit("join_list", { listId: currentList.id, clientId })
+      renderPresenceAvatars([], 1)
     }
   }
 
@@ -816,37 +822,37 @@
     }
   }
 
-  // --- REALTIME SERVER-SENT EVENTS ---
-  function connectRealtime(listId) {
-    if (eventSource) {
-      eventSource.close()
-      eventSource = null
+  // --- REALTIME SOCKET.IO CLIENT ---
+  function initSocket() {
+    if (typeof io === "undefined") {
+      console.warn("Socket.io client library not loaded.")
+      return
     }
 
-    eventSource = new EventSource(`/api/lists/${listId}/events`)
+    socket = io({
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+    })
 
-    eventSource.onopen = () => {
-      if (!currentList || currentList.id !== listId) return
-      renderPresenceAvatars([], 1)
-    }
-
-    eventSource.onerror = () => {
-      if (!currentList || currentList.id !== listId) return
-      avatarStackEl.innerHTML = ""
-      presenceLabelEl.textContent = "Offline"
-      if (!navigator.onLine) {
-        setOfflineState(true)
+    socket.on("connect", () => {
+      if (currentList) {
+        socket.emit("join_list", { listId: currentList.id, clientId })
       }
-    }
+    })
 
-    eventSource.addEventListener("presence", (e) => {
-      if (!currentList || currentList.id !== listId) return
-      const data = JSON.parse(e.data)
+    socket.on("disconnect", () => {
+      if (presenceLabelEl) presenceLabelEl.textContent = "Offline"
+    })
+
+    socket.on("presence", (data) => {
+      if (!currentList) return
       renderPresenceAvatars(data.users, data.count)
     })
 
-    eventSource.addEventListener("item_added", (e) => {
-      const newItem = JSON.parse(e.data)
+    socket.on("item_added", (newItem) => {
       if (
         !currentList ||
         (newItem.list_id && newItem.list_id !== currentList.id)
@@ -860,8 +866,7 @@
       }
     })
 
-    eventSource.addEventListener("item_updated", (e) => {
-      const updatedItem = JSON.parse(e.data)
+    socket.on("item_updated", (updatedItem) => {
       if (
         !currentList ||
         (updatedItem.list_id && updatedItem.list_id !== currentList.id)
@@ -871,8 +876,7 @@
       renderGroceryItems()
     })
 
-    eventSource.addEventListener("item_deleted", (e) => {
-      const data = JSON.parse(e.data)
+    socket.on("item_deleted", (data) => {
       if (!currentList || (data.listId && data.listId !== currentList.id))
         return
       items = items.filter((i) => i.id !== data.id)
@@ -882,8 +886,7 @@
       }
     })
 
-    eventSource.addEventListener("items_cleared", (e) => {
-      const data = JSON.parse(e.data)
+    socket.on("items_cleared", (data) => {
       if (!currentList || (data.listId && data.listId !== currentList.id))
         return
       items = data.items || []
@@ -893,15 +896,13 @@
       }
     })
 
-    eventSource.addEventListener("list_updated", (e) => {
-      const updated = JSON.parse(e.data)
+    socket.on("list_updated", (updated) => {
       if (!currentList || (updated.id && updated.id !== currentList.id)) return
       currentList.title = updated.title
       renderListHeader()
     })
 
-    eventSource.addEventListener("list_deleted", (e) => {
-      const data = e.data ? JSON.parse(e.data) : {}
+    socket.on("list_deleted", (data) => {
       if (!currentList || (data.id && data.id !== currentList.id)) return
       showToast("This list was deleted.")
       window.history.pushState(null, "", "/")

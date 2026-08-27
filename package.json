@@ -1,7 +1,7 @@
 {
   "name": "family-grocery-list",
   "version": "1.0.0",
-  "description": "Ultra-lightweight shared grocery notepad for families with realtime sync",
+  "description": "Shared grocery notepad for families with Express and Socket.io realtime sync",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,5 +10,10 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
 }
