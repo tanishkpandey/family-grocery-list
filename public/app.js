@@ -59,6 +59,7 @@
   let items = [];
   let allLists = [];
   let eventSource = null;
+  let activeFetchId = 0;
   const pendingDeletes = new Map();
   let hadItems = false;
   let isOffline = !navigator.onLine;
@@ -365,6 +366,7 @@
 
   // --- STATE A: DASHBOARD VIEW ---
   async function showDashboardView() {
+    activeFetchId++;
     viewDashboard.classList.remove('hidden');
     viewDashboard.classList.add('view-entering');
     viewList.classList.add('hidden');
@@ -526,20 +528,36 @@
 
   // --- STATE B: LIST VIEW ---
   async function showListView(identifier) {
+    activeFetchId++;
+    const fetchId = activeFetchId;
+
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
+
+    currentList = null;
+    items = [];
+    hadItems = false;
+
     viewDashboard.classList.add('hidden');
     viewDashboard.classList.remove('view-entering');
     viewList.classList.remove('hidden');
     viewList.classList.add('view-entering');
 
-    await fetchListDetails(identifier);
+    await fetchListDetails(identifier, fetchId);
+    if (fetchId !== activeFetchId) return;
+
     if (currentList) {
       connectRealtime(currentList.id);
     }
   }
 
-  async function fetchListDetails(identifier) {
+  async function fetchListDetails(identifier, fetchId) {
     try {
       const res = await fetch(`/api/lists/${identifier}`);
+      if (fetchId !== activeFetchId) return;
+
       if (!res.ok) {
         showToast("List not found.");
         window.history.pushState(null, '', '/');
@@ -548,12 +566,15 @@
       }
 
       currentList = await res.json();
+      if (fetchId !== activeFetchId) return;
+
       items = currentList.items || [];
       hadItems = items.length > 0;
 
       renderListHeader();
       renderGroceryItems();
     } catch (err) {
+      if (fetchId !== activeFetchId) return;
       console.error(err);
       if (!navigator.onLine) {
         setOfflineState(true);
@@ -759,15 +780,20 @@
 
   // --- REALTIME SERVER-SENT EVENTS ---
   function connectRealtime(listId) {
-    if (eventSource) eventSource.close();
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
 
     eventSource = new EventSource(`/api/lists/${listId}/events`);
 
     eventSource.onopen = () => {
+      if (!currentList || currentList.id !== listId) return;
       renderPresenceAvatars([], 1);
     };
 
     eventSource.onerror = () => {
+      if (!currentList || currentList.id !== listId) return;
       avatarStackEl.innerHTML = '';
       presenceLabelEl.textContent = 'Offline';
       if (!navigator.onLine) {
@@ -776,12 +802,14 @@
     };
 
     eventSource.addEventListener('presence', (e) => {
+      if (!currentList || currentList.id !== listId) return;
       const data = JSON.parse(e.data);
       renderPresenceAvatars(data.users, data.count);
     });
 
     eventSource.addEventListener('item_added', (e) => {
       const newItem = JSON.parse(e.data);
+      if (!currentList || (newItem.list_id && newItem.list_id !== currentList.id)) return;
       const exists = items.some((i) => i.id === newItem.id);
       if (!exists) {
         items.push(newItem);
@@ -792,13 +820,15 @@
 
     eventSource.addEventListener('item_updated', (e) => {
       const updatedItem = JSON.parse(e.data);
+      if (!currentList || (updatedItem.list_id && updatedItem.list_id !== currentList.id)) return;
       items = items.map((i) => (i.id === updatedItem.id ? updatedItem : i));
       renderGroceryItems();
     });
 
     eventSource.addEventListener('item_deleted', (e) => {
-      const { id } = JSON.parse(e.data);
-      items = items.filter((i) => i.id !== id);
+      const data = JSON.parse(e.data);
+      if (!currentList || (data.listId && data.listId !== currentList.id)) return;
+      items = items.filter((i) => i.id !== data.id);
       renderGroceryItems();
       if (items.length === 0 && hadItems) {
         checkEmptyListAutoDelete();
@@ -807,6 +837,7 @@
 
     eventSource.addEventListener('items_cleared', (e) => {
       const data = JSON.parse(e.data);
+      if (!currentList || (data.listId && data.listId !== currentList.id)) return;
       items = data.items || [];
       renderGroceryItems();
       if (items.length === 0 && hadItems) {
@@ -816,11 +847,14 @@
 
     eventSource.addEventListener('list_updated', (e) => {
       const updated = JSON.parse(e.data);
+      if (!currentList || (updated.id && updated.id !== currentList.id)) return;
       currentList.title = updated.title;
       renderListHeader();
     });
 
-    eventSource.addEventListener('list_deleted', () => {
+    eventSource.addEventListener('list_deleted', (e) => {
+      const data = e.data ? JSON.parse(e.data) : {};
+      if (!currentList || (data.id && data.id !== currentList.id)) return;
       showToast('This list was deleted.');
       window.history.pushState(null, '', '/');
       showDashboardView();

@@ -368,16 +368,16 @@ const AVATAR_PALETTE = [
 
 // Indian & Family Presence Emojis for Active Members
 const PRESENCE_EMOJIS = [
-  { emoji: "🦚", label: "Mor (Peacock)" },
-  { emoji: "🪷", label: "Kamal (Lotus)" },
-  { emoji: "🐘", label: "Haathi (Elephant)" },
-  { emoji: "🥭", label: "Aam (Mango)" },
+  { emoji: "🦚", label: "Mor" },
+  { emoji: "🪷", label: "Kamal" },
+  { emoji: "🐘", label: "Haathi" },
+  { emoji: "🥭", label: "Aam" },
   { emoji: "🫖", label: "Chai" },
-  { emoji: "🐯", label: "Bagh (Tiger)" },
-  { emoji: "🥥", label: "Nariyal (Coconut)" },
+  { emoji: "🐯", label: "Bagh" },
+  { emoji: "🥥", label: "Nariyal" },
   { emoji: "🪔", label: "Diya" },
   { emoji: "🌻", label: "Surajmukhi" },
-  { emoji: "🦁", label: "Sher (Lion)" },
+  { emoji: "🦁", label: "Sher" },
 ]
 
 const sseClients = new Map() // listId -> Set of res objects
@@ -394,7 +394,7 @@ function getPresenceUsers(listId) {
       clientId: client._clientId || `c-${idx}`,
       name:
         client._clientName ||
-        (idx === 0 ? "You" : `Family Member (${emojiInfo.label})`),
+        (idx === 0 ? "You" : `${emojiInfo.label}`),
       emoji: emojiInfo.emoji,
       initial: emojiInfo.emoji,
       color: palette.bg,
@@ -744,7 +744,7 @@ const server = http.createServer(async (req, res) => {
     list.updated_at = new Date().toISOString()
     saveStore()
 
-    broadcast(list.id, "items_cleared", { mode, items: list.items })
+    broadcast(list.id, "items_cleared", { listId: list.id, mode, items: list.items })
 
     if (isCloudConfigured) {
       supabase.clearItems(list.id, mode).catch(console.warn)
@@ -823,7 +823,7 @@ const server = http.createServer(async (req, res) => {
     list.updated_at = new Date().toISOString()
     saveStore()
 
-    broadcast(list.id, "item_deleted", { id: itemId })
+    broadcast(list.id, "item_deleted", { listId: list.id, id: itemId })
 
     if (isCloudConfigured) {
       supabase.deleteItem(list.id, itemId).catch(console.warn)
