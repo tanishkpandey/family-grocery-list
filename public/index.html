@@ -6,10 +6,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
-    <title>Ghar Ki Rasoi | Family Grocery List</title>
+    <title>Ghar ki zaroorat | Shared Shopping Lists</title>
     <meta
       name="description"
-      content="A simple, fast, shared grocery notepad for your family. No login, instant realtime sync."
+      content="A simple, fast, shared grocery and shopping notepad for your family. No login required."
     />
     <meta name="theme-color" content="#424874" />
 
@@ -26,7 +26,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/style.css?v=3.0.0" />
   </head>
   <body>
     <!-- ================= OFFLINE STATUS BANNER ================= -->
@@ -51,9 +51,41 @@
           <line x1="12" y1="20" x2="12.01" y2="20"></line>
         </svg>
         <span id="offline-banner-text"
-          >You are offline (इंटरनेट बंद है). Live sync is unavailable — please
-          reconnect to use the app.</span
+          >You are offline (इंटरनेट बंद है). Please reconnect to sync
+          changes.</span
         >
+      </div>
+    </div>
+
+    <!-- ================= SLOW NETWORK WARNING BANNER ================= -->
+    <div id="slow-network-banner" class="slow-network-banner hidden">
+      <div class="slow-network-banner-inner">
+        <svg
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          stroke="currentColor"
+          stroke-width="2.5"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+          <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+          <line x1="12" y1="20" x2="12.01" y2="20"></line>
+        </svg>
+        <span
+          >⚠️ Slow network detected (कमज़ोर इंटरनेट). Please move to a spot with
+          better reception.</span
+        >
+        <button
+          id="btn-dismiss-slow-banner"
+          class="btn-banner-close"
+          aria-label="Dismiss warning"
+        >
+          ✕
+        </button>
       </div>
     </div>
 
@@ -67,9 +99,9 @@
               <span class="brand-emoji">🧺</span>
             </div>
             <div>
-              <div class="brand-badge-hindi">घर का राशन</div>
-              <h1 class="dashboard-title">Shopping Lists</h1>
-              <p class="dashboard-sub">Shared household notepads</p>
+              <div class="brand-badge-hindi">घर की ज़रूरत</div>
+              <h1 class="dashboard-title">Ghar ki zaroorat</h1>
+              <p class="dashboard-sub">Shared household shopping lists</p>
             </div>
           </div>
 
@@ -121,11 +153,6 @@
             <div class="loading-hint">Loading your shopping lists...</div>
           </div>
         </main>
-
-        <!-- Indian Touch Footer -->
-        <footer class="app-footer">
-          <p class="footer-credit">Made by Tanishk with love ❤️</p>
-        </footer>
       </div>
     </div>
 
@@ -191,12 +218,6 @@
                 class="input-title-edit"
               />
               <button id="btn-save-title" class="btn-save-title">Save</button>
-            </div>
-
-            <!-- Emoji Presence Avatars Stack -->
-            <div class="presence-bar">
-              <div id="avatar-stack" class="avatar-stack"></div>
-              <span id="presence-label" class="presence-label">1 online</span>
             </div>
           </div>
 
@@ -455,6 +476,45 @@
       </div>
     </div>
 
+    <!-- ================= LIST DELETE / MANAGE OPTIONS MODAL ================= -->
+    <div id="modal-list-actions" class="modal-backdrop hidden">
+      <div class="modal-card modal-actions-sheet">
+        <h3 class="modal-title">Delete Options</h3>
+        <p class="modal-message">Choose what you want to remove:</p>
+
+        <div class="list-action-options">
+          <button id="btn-option-clear-purchased" class="btn-action-option">
+            <div class="option-icon">🛒</div>
+            <div class="option-text">
+              <strong class="option-title">Clear Purchased Items</strong>
+              <span id="purchased-items-count-label" class="option-sub"
+                >Remove only checked off items</span
+              >
+            </div>
+          </button>
+
+          <button
+            id="btn-option-delete-entire-list"
+            class="btn-action-option option-danger"
+          >
+            <div class="option-icon">🗑️</div>
+            <div class="option-text">
+              <strong class="option-title">Delete Entire List</strong>
+              <span class="option-sub"
+                >Permanently delete this list and all its items</span
+              >
+            </div>
+          </button>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-cancel-list-actions" class="btn-modal-cancel">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ================= CONFIRMATION MODAL ================= -->
     <div id="modal-backdrop" class="modal-backdrop hidden">
       <div class="modal-card">
@@ -474,8 +534,7 @@
     <!-- ================= SUBTLE, NON-INTRUSIVE TOAST CONTAINER ================= -->
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- Realtime Socket.IO & Application Logic -->
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/app.js"></script>
+    <!-- Application Logic -->
+    <script src="/app.js?v=3.0.0"></script>
   </body>
 </html>

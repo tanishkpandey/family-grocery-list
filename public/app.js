@@ -58,11 +58,6 @@
   let currentList = null
   let items = []
   let allLists = []
-  let socket = null
-  let clientId =
-    localStorage.getItem("family_client_id") ||
-    "c_" + Math.random().toString(36).slice(2, 9)
-  localStorage.setItem("family_client_id", clientId)
   let activeFetchId = 0
   const pendingDeletes = new Map()
   let hadItems = false
@@ -96,10 +91,6 @@
   const btnDeleteCurrentList = document.getElementById(
     "btn-delete-current-list",
   )
-
-  // Presence
-  const avatarStackEl = document.getElementById("avatar-stack")
-  const presenceLabelEl = document.getElementById("presence-label")
 
   // Share
   const btnShare = document.getElementById("btn-share")
@@ -147,21 +138,75 @@
   const btnModalConfirm = document.getElementById("btn-modal-confirm")
   let modalConfirmCallback = null
 
+  // List Delete Options Modal
+  const modalListActions = document.getElementById("modal-list-actions")
+  const btnOptionClearPurchased = document.getElementById(
+    "btn-option-clear-purchased",
+  )
+  const btnOptionDeleteEntireList = document.getElementById(
+    "btn-option-delete-entire-list",
+  )
+  const btnCancelListActions = document.getElementById(
+    "btn-cancel-list-actions",
+  )
+  const purchasedItemsCountLabel = document.getElementById(
+    "purchased-items-count-label",
+  )
+
+  // Slow Network Warning Banner
+  const slowNetworkBanner = document.getElementById("slow-network-banner")
+  const btnDismissSlowBanner = document.getElementById(
+    "btn-dismiss-slow-banner",
+  )
+
   // Toast
   const toastContainer = document.getElementById("toast-container")
 
-  // --- OFFLINE / ONLINE DETECTION ---
+  // --- OFFLINE / ONLINE & SLOW NETWORK DETECTION ---
   let onlineRecoverTimer = null
+  let slowNetworkTimer = null
+
+  if (btnDismissSlowBanner) {
+    btnDismissSlowBanner.addEventListener("click", () => {
+      if (slowNetworkBanner) slowNetworkBanner.classList.add("hidden")
+    })
+  }
+
+  function setSlowNetworkState(isSlow) {
+    if (!slowNetworkBanner) return
+    if (isSlow && !isOffline) {
+      slowNetworkBanner.classList.remove("hidden")
+    } else {
+      slowNetworkBanner.classList.add("hidden")
+    }
+  }
+
+  function checkNetworkQuality() {
+    if (navigator.connection) {
+      const { effectiveType, rtt, downlink } = navigator.connection
+      const isSlow =
+        effectiveType === "slow-2g" ||
+        effectiveType === "2g" ||
+        (rtt && rtt > 1800) ||
+        (downlink && downlink < 0.25)
+      setSlowNetworkState(isSlow)
+    }
+  }
+
+  if (navigator.connection) {
+    navigator.connection.addEventListener("change", checkNetworkQuality)
+    checkNetworkQuality()
+  }
 
   function setOfflineState(offline) {
     isOffline = offline
 
     if (offline) {
+      setSlowNetworkState(false)
       if (onlineRecoverTimer) clearTimeout(onlineRecoverTimer)
       offlineBanner.classList.remove("hidden", "online-recovered")
       offlineBannerText.textContent =
-        "You are offline (इंटरनेट बंद है). Live sync is unavailable — please reconnect to use the app."
-      if (presenceLabelEl) presenceLabelEl.textContent = "Offline"
+        "You are offline (इंटरनेट बंद है). Please reconnect to sync changes."
     } else {
       offlineBanner.classList.remove("hidden")
       offlineBanner.classList.add("online-recovered")
@@ -169,9 +214,6 @@
         "✅ Back online! Syncing your shopping lists..."
 
       if (currentList) {
-        if (socket) {
-          socket.emit("join_list", { listId: currentList.id, clientId })
-        }
         fetchListDetails(currentList.id)
       } else {
         fetchAllLists().then(() => renderDashboardLists())
@@ -180,6 +222,7 @@
       onlineRecoverTimer = setTimeout(() => {
         offlineBanner.classList.add("hidden")
         offlineBanner.classList.remove("online-recovered")
+        checkNetworkQuality()
       }, 2500)
     }
   }
@@ -204,7 +247,6 @@
   }
 
   function initApp() {
-    initSocket()
     renderQuickChipsBar()
     const listId = getListIdFromUrl()
     if (listId) {
@@ -376,11 +418,58 @@
     try {
       const res = await fetch("/api/lists")
       if (res.ok) {
-        allLists = await res.json()
+        const data = await res.json()
+        allLists = Array.isArray(data) ? data : []
+      } else {
+        allLists = []
       }
     } catch (err) {
       console.warn("Could not fetch all lists:", err)
+      allLists = []
     }
+  }
+
+  function renderDashboardSkeletons() {
+    dashboardListsContainer.innerHTML = `
+      <div class="skeleton-card cascade-enter" style="--item-idx: 0">
+        <div class="skeleton-content">
+          <div class="skeleton-top">
+            <div class="skeleton-shimmer skeleton-title-bar"></div>
+            <div class="skeleton-shimmer skeleton-badge"></div>
+          </div>
+          <div class="skeleton-chips">
+            <div class="skeleton-shimmer skeleton-chip"></div>
+            <div class="skeleton-shimmer skeleton-chip"></div>
+            <div class="skeleton-shimmer skeleton-chip"></div>
+          </div>
+        </div>
+      </div>
+      <div class="skeleton-card cascade-enter" style="--item-idx: 1">
+        <div class="skeleton-content">
+          <div class="skeleton-top">
+            <div class="skeleton-shimmer skeleton-title-bar" style="width: 55%"></div>
+            <div class="skeleton-shimmer skeleton-badge"></div>
+          </div>
+          <div class="skeleton-chips">
+            <div class="skeleton-shimmer skeleton-chip"></div>
+            <div class="skeleton-shimmer skeleton-chip"></div>
+          </div>
+        </div>
+      </div>
+      <div class="skeleton-card cascade-enter" style="--item-idx: 2">
+        <div class="skeleton-content">
+          <div class="skeleton-top">
+            <div class="skeleton-shimmer skeleton-title-bar" style="width: 70%"></div>
+            <div class="skeleton-shimmer skeleton-badge"></div>
+          </div>
+          <div class="skeleton-chips">
+            <div class="skeleton-shimmer skeleton-chip"></div>
+            <div class="skeleton-shimmer skeleton-chip"></div>
+            <div class="skeleton-shimmer skeleton-chip"></div>
+          </div>
+        </div>
+      </div>
+    `
   }
 
   // --- STATE A: DASHBOARD VIEW ---
@@ -392,22 +481,17 @@
     viewList.classList.remove("view-entering")
     formNewListCard.classList.add("hidden")
 
-    if (socket && currentList) {
-      socket.emit("leave_list", { listId: currentList.id })
-    }
-
     currentList = null
     items = []
     hadItems = false
 
-    dashboardListsContainer.innerHTML =
-      '<div class="loading-hint">Loading your shopping lists...</div>'
+    renderDashboardSkeletons()
     await fetchAllLists()
     renderDashboardLists()
   }
 
   function renderDashboardLists() {
-    if (!allLists || allLists.length === 0) {
+    if (!Array.isArray(allLists) || allLists.length === 0) {
       dashboardListsContainer.innerHTML = `
         <div class="empty-state" id="btn-empty-create">
           <div class="empty-emoji">🧺</div>
@@ -423,9 +507,10 @@
     }
 
     dashboardListsContainer.innerHTML = ""
-    allLists.forEach((list) => {
+    allLists.forEach((list, idx) => {
       const card = document.createElement("div")
-      card.className = "list-card"
+      card.className = "list-card cascade-enter"
+      card.style.setProperty("--item-idx", idx)
 
       const targetId = list.share_token || list.id
 
@@ -452,7 +537,12 @@
       if (list.preview_items && list.preview_items.length > 0) {
         const preview = document.createElement("div")
         preview.className = "list-card-previews"
-        preview.textContent = list.preview_items.join(" • ")
+        list.preview_items.forEach((item) => {
+          const chip = document.createElement("span")
+          chip.className = "list-preview-chip"
+          chip.textContent = item
+          preview.appendChild(chip)
+        })
         content.appendChild(preview)
       }
 
@@ -535,14 +625,38 @@
     }
   })
 
+  function renderListItemsSkeletons() {
+    listTitleEl.textContent = "Loading list..."
+    activeItemsEl.innerHTML = `
+      <div class="skeleton-item-row cascade-enter" style="--item-idx: 0">
+        <div class="skeleton-shimmer skeleton-circle"></div>
+        <div class="skeleton-shimmer skeleton-item-name" style="width: 55%"></div>
+        <div class="skeleton-shimmer skeleton-qty-pill"></div>
+      </div>
+      <div class="skeleton-item-row cascade-enter" style="--item-idx: 1">
+        <div class="skeleton-shimmer skeleton-circle"></div>
+        <div class="skeleton-shimmer skeleton-item-name" style="width: 40%"></div>
+        <div class="skeleton-shimmer skeleton-qty-pill"></div>
+      </div>
+      <div class="skeleton-item-row cascade-enter" style="--item-idx: 2">
+        <div class="skeleton-shimmer skeleton-circle"></div>
+        <div class="skeleton-shimmer skeleton-item-name" style="width: 70%"></div>
+      </div>
+      <div class="skeleton-item-row cascade-enter" style="--item-idx: 3">
+        <div class="skeleton-shimmer skeleton-circle"></div>
+        <div class="skeleton-shimmer skeleton-item-name" style="width: 48%"></div>
+        <div class="skeleton-shimmer skeleton-qty-pill"></div>
+      </div>
+    `
+    sectionActive.classList.remove("hidden")
+    sectionCompleted.classList.add("hidden")
+    emptyStateEl.classList.add("hidden")
+  }
+
   // --- STATE B: LIST VIEW ---
   async function showListView(identifier) {
     activeFetchId++
     const fetchId = activeFetchId
-
-    if (socket && currentList) {
-      socket.emit("leave_list", { listId: currentList.id })
-    }
 
     currentList = null
     items = []
@@ -553,13 +667,8 @@
     viewList.classList.remove("hidden")
     viewList.classList.add("view-entering")
 
+    renderListItemsSkeletons()
     await fetchListDetails(identifier, fetchId)
-    if (fetchId !== activeFetchId) return
-
-    if (currentList && socket) {
-      socket.emit("join_list", { listId: currentList.id, clientId })
-      renderPresenceAvatars([], 1)
-    }
   }
 
   async function fetchListDetails(identifier, fetchId) {
@@ -601,10 +710,50 @@
     showDashboardView()
   })
 
-  // --- DIRECT DELETE LIST (ON THE LIST ITSELF) ---
+  // --- MANAGE LIST / DELETE OPTIONS (CLEAR PURCHASED VS DELETE ENTIRE LIST) ---
+  function openListActionsModal() {
+    if (!currentList || !modalListActions) return
+    const completedCount = items.filter((i) => i.completed).length
+    if (purchasedItemsCountLabel) {
+      purchasedItemsCountLabel.textContent =
+        completedCount > 0
+          ? `Remove ${completedCount} completed ${completedCount === 1 ? "item" : "items"}`
+          : "No items currently checked off"
+    }
+    modalListActions.classList.remove("hidden")
+  }
+
+  function closeListActionsModal() {
+    if (modalListActions) modalListActions.classList.add("hidden")
+  }
+
+  if (btnCancelListActions) {
+    btnCancelListActions.addEventListener("click", closeListActionsModal)
+  }
+
+  if (modalListActions) {
+    modalListActions.addEventListener("click", (e) => {
+      if (e.target === modalListActions) closeListActionsModal()
+    })
+  }
+
+  if (btnOptionClearPurchased) {
+    btnOptionClearPurchased.addEventListener("click", () => {
+      closeListActionsModal()
+      clearPurchasedItemsAction()
+    })
+  }
+
+  if (btnOptionDeleteEntireList) {
+    btnOptionDeleteEntireList.addEventListener("click", () => {
+      closeListActionsModal()
+      if (currentList) deleteListPrompt(currentList)
+    })
+  }
+
   btnDeleteCurrentList.addEventListener("click", () => {
     if (!currentList) return
-    deleteListPrompt(currentList)
+    openListActionsModal()
   })
 
   function deleteListPrompt(listObj) {
@@ -715,6 +864,8 @@
       titleDisplayWrap.classList.remove("hidden")
       titleEditWrap.classList.add("hidden")
       return
+    }
+
     currentList.title = newTitle
     renderListHeader()
     titleDisplayWrap.classList.remove("hidden")
@@ -740,150 +891,6 @@
     }
   })
 
-  // --- EMOJI PRESENCE AVATARS ---
-  const DEFAULT_EMOJIS = [
-    "🦚",
-    "🪷",
-    "🐘",
-    "🥭",
-    "🫖",
-    "🐯",
-    "🥥",
-    "🪔",
-    "🌻",
-    "🦁",
-  ]
-
-  function renderPresenceAvatars(users = [], count = 1) {
-    avatarStackEl.innerHTML = ""
-
-    if (!users || users.length === 0) {
-      const el = document.createElement("div")
-      el.className = "presence-avatar"
-      el.textContent = "🦚"
-      el.title = "You are online"
-      avatarStackEl.appendChild(el)
-      presenceLabelEl.textContent = "1 online"
-      return
-    }
-
-    const maxDisplay = 4
-    const displayUsers = users.slice(0, maxDisplay)
-
-    displayUsers.forEach((u, idx) => {
-      const av = document.createElement("div")
-      av.className = "presence-avatar"
-      av.style.backgroundColor = u.color || "#424874"
-      av.textContent =
-        u.emoji || u.initial || DEFAULT_EMOJIS[idx % DEFAULT_EMOJIS.length]
-      av.title =
-        idx === 0 ? "You (online)" : `Family Member (${u.name || "online"})`
-      avatarStackEl.appendChild(av)
-    })
-
-    if (users.length > maxDisplay) {
-      const extra = document.createElement("div")
-      extra.className = "presence-avatar extra"
-      extra.textContent = `+${users.length - maxDisplay}`
-      extra.title = `${users.length} people online`
-      avatarStackEl.appendChild(extra)
-    }
-
-    if (users.length === 1) {
-      presenceLabelEl.textContent = "1 online"
-    } else {
-      presenceLabelEl.textContent = `${users.length} online`
-    }
-  }
-
-  // --- REALTIME SOCKET.IO CLIENT ---
-  function initSocket() {
-    if (typeof io === "undefined") {
-      console.warn("Socket.io client library not loaded.")
-      return
-    }
-
-    socket = io({
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-    })
-
-    socket.on("connect", () => {
-      if (currentList) {
-        socket.emit("join_list", { listId: currentList.id, clientId })
-      }
-    })
-
-    socket.on("disconnect", () => {
-      if (presenceLabelEl) presenceLabelEl.textContent = "Offline"
-    })
-
-    socket.on("presence", (data) => {
-      if (!currentList) return
-      renderPresenceAvatars(data.users, data.count)
-    })
-
-    socket.on("item_added", (newItem) => {
-      if (
-        !currentList ||
-        (newItem.list_id && newItem.list_id !== currentList.id)
-      )
-        return
-      const exists = items.some((i) => i.id === newItem.id)
-      if (!exists) {
-        items.push(newItem)
-        hadItems = true
-        renderGroceryItems()
-      }
-    })
-
-    socket.on("item_updated", (updatedItem) => {
-      if (
-        !currentList ||
-        (updatedItem.list_id && updatedItem.list_id !== currentList.id)
-      )
-        return
-      items = items.map((i) => (i.id === updatedItem.id ? updatedItem : i))
-      renderGroceryItems()
-    })
-
-    socket.on("item_deleted", (data) => {
-      if (!currentList || (data.listId && data.listId !== currentList.id))
-        return
-      items = items.filter((i) => i.id !== data.id)
-      renderGroceryItems()
-      if (items.length === 0 && hadItems) {
-        checkEmptyListAutoDelete()
-      }
-    })
-
-    socket.on("items_cleared", (data) => {
-      if (!currentList || (data.listId && data.listId !== currentList.id))
-        return
-      items = data.items || []
-      renderGroceryItems()
-      if (items.length === 0 && hadItems) {
-        checkEmptyListAutoDelete()
-      }
-    })
-
-    socket.on("list_updated", (updated) => {
-      if (!currentList || (updated.id && updated.id !== currentList.id)) return
-      currentList.title = updated.title
-      renderListHeader()
-    })
-
-    socket.on("list_deleted", (data) => {
-      if (!currentList || (data.id && data.id !== currentList.id)) return
-      showToast("This list was deleted.")
-      window.history.pushState(null, "", "/")
-      showDashboardView()
-    })
-  }
-
   // --- RENDER ITEMS ---
   function renderGroceryItems() {
     const active = items
@@ -906,7 +913,9 @@
       if (active.length > 0) {
         sectionActive.classList.remove("hidden")
         activeItemsEl.innerHTML = ""
-        active.forEach((item) => activeItemsEl.appendChild(createItemRow(item)))
+        active.forEach((item, idx) =>
+          activeItemsEl.appendChild(createItemRow(item, idx)),
+        )
       } else {
         sectionActive.classList.add("hidden")
       }
@@ -914,8 +923,10 @@
       if (completed.length > 0) {
         sectionCompleted.classList.remove("hidden")
         completedItemsEl.innerHTML = ""
-        completed.forEach((item) =>
-          completedItemsEl.appendChild(createItemRow(item)),
+        completed.forEach((item, idx) =>
+          completedItemsEl.appendChild(
+            createItemRow(item, idx + active.length),
+          ),
         )
       } else {
         sectionCompleted.classList.add("hidden")
@@ -923,10 +934,11 @@
     }
   }
 
-  function createItemRow(item) {
+  function createItemRow(item, itemIdx = 0) {
     const row = document.createElement("div")
-    row.className = `grocery-row ${item.completed ? "completed" : ""}`
+    row.className = `grocery-row cascade-enter ${item.completed ? "completed" : ""}`
     row.id = `item-${item.id}`
+    row.style.setProperty("--item-idx", itemIdx)
 
     // Checkbox button
     const checkBtn = document.createElement("button")
@@ -1136,7 +1148,7 @@
     pendingDeletes.set(itemId, { item: deletedItem, timer, toastEl })
   }
 
-  btnClearPurchasedInline.addEventListener("click", async () => {
+  async function clearPurchasedItemsAction() {
     if (!navigator.onLine) {
       showToast("You are offline. Reconnect to clear items.")
       return
@@ -1183,7 +1195,11 @@
       },
       3000,
     )
-  })
+  }
+
+  if (btnClearPurchasedInline) {
+    btnClearPurchasedInline.addEventListener("click", clearPurchasedItemsAction)
+  }
 
   // --- ADD ITEM SUBMISSION (Instant Enter Key Handling) ---
   const handleAddItemSubmit = async (e) => {
