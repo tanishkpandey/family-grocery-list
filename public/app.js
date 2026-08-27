@@ -519,20 +519,6 @@
     const title = inputNewListTitle.value.trim()
     if (!title) return
 
-    const exists = allLists.some(
-      (l) => l.title.trim().toLowerCase() === title.toLowerCase(),
-    )
-    if (exists) {
-      showToast(`Opening existing list "${title}"`)
-      const existing = allLists.find(
-        (l) => l.title.trim().toLowerCase() === title.toLowerCase(),
-      )
-      const targetId = existing.share_token || existing.id
-      window.history.pushState(null, "", `/list/${targetId}`)
-      showListView(targetId)
-      return
-    }
-
     try {
       const res = await fetch("/api/lists", {
         method: "POST",
@@ -729,18 +715,6 @@
       titleDisplayWrap.classList.remove("hidden")
       titleEditWrap.classList.add("hidden")
       return
-    }
-
-    const conflict = allLists.some(
-      (l) =>
-        l.id !== currentList.id &&
-        l.title.trim().toLowerCase() === newTitle.toLowerCase(),
-    )
-    if (conflict) {
-      showToast(`A list named "${newTitle}" already exists.`)
-      return
-    }
-
     currentList.title = newTitle
     renderListHeader()
     titleDisplayWrap.classList.remove("hidden")

@@ -466,17 +466,9 @@ app.get('/api/lists', async (req, res) => {
   res.json(allLists);
 });
 
-// 2. Create new list (Enforce unique name)
+// 2. Create new list
 app.post('/api/lists', async (req, res) => {
   const title = (req.body.title || 'Family Grocery List').trim().slice(0, 100);
-
-  const existing = Object.values(store.lists).find(
-    (l) => l.title.trim().toLowerCase() === title.trim().toLowerCase()
-  );
-  if (existing) {
-    return res.json(existing);
-  }
-
   const id = crypto.randomUUID ? crypto.randomUUID() : generateRandomToken(16);
   const shareToken = generateRandomToken(9);
   const now = new Date().toISOString();
@@ -494,7 +486,11 @@ app.post('/api/lists', async (req, res) => {
   saveStore();
 
   if (isCloudConfigured) {
-    supabase.createList(id, newList.title, shareToken).catch(console.warn);
+    try {
+      await supabase.createList(id, newList.title, shareToken);
+    } catch (err) {
+      console.warn('[Supabase] createList error:', err.message);
+    }
   }
 
   res.status(201).json(newList);
@@ -518,13 +514,6 @@ app.put('/api/lists/:id', async (req, res) => {
 
   const newTitle = (req.body.title || '').trim().slice(0, 100);
   if (newTitle) {
-    const conflict = Object.values(store.lists).find(
-      (l) => l.id !== list.id && l.title.trim().toLowerCase() === newTitle.toLowerCase()
-    );
-    if (conflict) {
-      return res.status(400).json({ error: `A list named "${newTitle}" already exists.` });
-    }
-
     list.title = newTitle;
     list.updated_at = new Date().toISOString();
     saveStore();
@@ -532,7 +521,11 @@ app.put('/api/lists/:id', async (req, res) => {
     io.to(`list_${list.id}`).emit('list_updated', list);
 
     if (isCloudConfigured) {
-      supabase.updateListTitle(list.id, newTitle).catch(console.warn);
+      try {
+        await supabase.updateListTitle(list.id, newTitle);
+      } catch (err) {
+        console.warn('[Supabase] updateListTitle error:', err.message);
+      }
     }
   }
 
@@ -553,7 +546,11 @@ app.delete('/api/lists/:id', async (req, res) => {
   io.to(`list_${deletedId}`).emit('list_deleted', { id: deletedId });
 
   if (isCloudConfigured) {
-    supabase.deleteList(deletedId).catch(console.warn);
+    try {
+      await supabase.deleteList(deletedId);
+    } catch (err) {
+      console.warn('[Supabase] deleteList error:', err.message);
+    }
   }
 
   res.json({ success: true, id: deletedId });
@@ -599,7 +596,11 @@ app.post('/api/lists/:id/items', async (req, res) => {
   io.to(`list_${list.id}`).emit('item_added', newItem);
 
   if (isCloudConfigured) {
-    supabase.addItem(newItem).catch(console.warn);
+    try {
+      await supabase.addItem(newItem);
+    } catch (err) {
+      console.warn('[Supabase] addItem error:', err.message);
+    }
   }
 
   res.status(201).json(newItem);
@@ -633,7 +634,11 @@ app.delete('/api/lists/:id/items', async (req, res) => {
   });
 
   if (isCloudConfigured) {
-    supabase.clearItems(list.id, mode).catch(console.warn);
+    try {
+      await supabase.clearItems(list.id, mode);
+    } catch (err) {
+      console.warn('[Supabase] clearItems error:', err.message);
+    }
   }
 
   res.json({ success: true, mode, count: removedItems.length, removedItems });
@@ -677,7 +682,11 @@ app.put('/api/lists/:id/items/:itemId', async (req, res) => {
   io.to(`list_${list.id}`).emit('item_updated', item);
 
   if (isCloudConfigured) {
-    supabase.updateItem(list.id, itemId, updates).catch(console.warn);
+    try {
+      await supabase.updateItem(list.id, itemId, updates);
+    } catch (err) {
+      console.warn('[Supabase] updateItem error:', err.message);
+    }
   }
 
   res.json(item);
@@ -703,7 +712,11 @@ app.delete('/api/lists/:id/items/:itemId', async (req, res) => {
   io.to(`list_${list.id}`).emit('item_deleted', { listId: list.id, id: itemId });
 
   if (isCloudConfigured) {
-    supabase.deleteItem(list.id, itemId).catch(console.warn);
+    try {
+      await supabase.deleteItem(list.id, itemId);
+    } catch (err) {
+      console.warn('[Supabase] deleteItem error:', err.message);
+    }
   }
 
   res.json({ success: true, deletedItem });
